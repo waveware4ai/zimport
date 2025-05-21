@@ -1,7 +1,8 @@
 # zimport
 
 zimport is used to load and manage python packages from zip-archives.
-It supports not only reading files inside zip-archive, but also dynamic file loading.
+in other words, it allows you to manage python packages like java jars.
+and, it supports not only reading files inside zip-archive, but also dynamic file loading.
 
 zimport has been tested on python v3.8 to v3.12, on windows/linux.
 Also, when I tested it on various versions of pytorch, pandas, onnx, scipy, and scikitrun, it worked without any problems.
@@ -28,6 +29,8 @@ Type "help", "copyright", "credits" or "license" for more information.
 '0.1'
 >>>
 ```
-Example
+Example (build pytorch zip archive) 
 ------------
-
+1. delete or move all files in [python excutable path]/lib/site-packages to another location.
+   (This is because files stored in site-packages must be deleted after creating the zip archive.)
+2. 
