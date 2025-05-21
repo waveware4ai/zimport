@@ -9,6 +9,10 @@ also, when I tested it on various versions of pytorch, pandas, onnx, scipy, and 
 
 If users find bugs or problems while using the app, please leave an Issue.
 
+History
+------------
+2025/05/21 v0.1 released
+
 Installation
 ------------
 
