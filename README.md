@@ -90,6 +90,10 @@ NVIDIA GeForce RTX 2080
 If you added path to python3xx.pth, you can call it elegantly in one line.
 ```
 python -c "import zimport;import torch;print(torch.__version__);print(torch.cuda.is_available());print(torch.cuda.get_device_name(0));"
+2.3.1+cu118
+True
+NVIDIA GeForce RTX 2080
+>>>
 ```
 
 
