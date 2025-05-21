@@ -113,4 +113,6 @@ zimport.precache_directory(PATH) # This pre-caches the directory. Normally you w
 
 Save your Storage
 ------------
-
+<p float="middle">
+    <img src="resources\torch before after.png" alt="torch before after" width="100%"/>
+</p>
