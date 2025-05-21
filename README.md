@@ -33,4 +33,16 @@ Example (build pytorch zip archive)
 ------------
 1. delete or move all files in [python excutable path]/lib/site-packages to another location.
    (This is because files stored in site-packages must be deleted after creating the zip archive.)
-2. 
+2. download torch and dependencies via pip. Here we will use torch version 2.3.1.
+```python
+python -m pip install torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 --index-url https://download.pytorch.org/whl/cu118
+```
+3. Once the download is complete, check that the package is working properly.
+```python
+python -c "import torch;print(torch.__version__);print(torch.cuda.is_available());print(torch.cuda.get_device_name(0));"
+2.3.1+cu118
+True
+NVIDIA GeForce RTX 2080
+```
+
+
