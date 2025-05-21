@@ -10,7 +10,7 @@ Installation
 ```
 ./lib/site-packages.zimport.v0.1.zip
 ```
-3. run python console
+3. run python console then, type 'import zimport'
 ```
 X:\portable.python.v3.11.09.x64.win>python
 Python 3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)] on win32
@@ -22,7 +22,4 @@ Type "help", "copyright", "credits" or "license" for more information.
 '0.1'
 >>>
 ```
-4. 
-5. 
-6. 
 
