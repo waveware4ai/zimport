@@ -11,4 +11,6 @@ setup(
     license='GPL-3.0 license',
     author='14mhz',
     author_email='14mhz@hanmail.net',
+    keywords='python import package zip pyd',
+    python_requires='>=3.8',    
 )
