@@ -96,4 +96,17 @@ NVIDIA GeForce RTX 2080
 >>>
 ```
 
+Usage
+------------
+```pyton
+zimport.install()                # Since it is installed at the same time as import, there is no need to use it in general cases.
+zimport.debug(True/False)        # Used to perform debugging. The default is False.
+zimport.invalidate_caches()      # Used to clear cache information. Mainly needed for reloading when modifying .py.
+zimport.precache_dll(PATH)       # This pre-caches the dll. Normally you won't need to do this.
+zimport.precache_file(PATH)      # This pre-caches the file. Normally you won't need to do this.
+zimport.precache_directory(PATH) # This pre-caches the directory. Normally you won't need to do this.
+```
+
+Save your Storage
+------------
 
