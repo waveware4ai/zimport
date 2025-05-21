@@ -72,5 +72,24 @@ You can check that both are registered through sys.path.
 [6] : X:\python\portable.python.v3.11.09.x64.win\lib\site-packages.zimport.v0.1.zip
 [7] : X:\python\portable.python.v3.11.09.x64.win\lib/site-packages.torch.v2.3.1+cu118.zip
 ```
+6. The final step is to import the pytorch module.
+```
+>>> import zimport, os, sys
+[INF] zimport installed ...
+[INF] zimport cache_dir ::: [X:/python/portable.python.v3.11.09.x64.win/.cache] from find('.cache')
+>>> sys.path.append(os.path.join(os.getcwd(), "lib/site-packages.torch.v2.3.1+cu118.zip"))
+>>> import torch
+>>> print(torch.__version__)
+2.3.1+cu118
+>>> print(torch.cuda.is_available())
+True
+>>> print(torch.cuda.get_device_name(0))
+NVIDIA GeForce RTX 2080
+>>>
+```
+If you added path to python3xx.pth, you can call it elegantly in one line.
+```
+python -c "import zimport;import torch;print(torch.__version__);print(torch.cuda.is_available());print(torch.cuda.get_device_name(0));"
+```
 
 
