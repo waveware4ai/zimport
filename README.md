@@ -29,7 +29,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 '0.1'
 >>>
 ```
-Example (build pytorch zip archive) 
+Example (build pytorch zip-archive) 
 ------------
 1. delete or move all files in [python excutable path]/lib/site-packages to another location.
    (This is because files stored in site-packages must be deleted after creating the zip archive.)
@@ -43,6 +43,34 @@ python -c "import torch;print(torch.__version__);print(torch.cuda.is_available()
 2.3.1+cu118
 True
 NVIDIA GeForce RTX 2080
+```
+4. Now go into site-packages and zip-archive all the files and empty site-packages
+```python
+cd [python excutable path]/lib/site-packages
+zip -r ../site-packages.torch.v2.3.1+cu118.zip *
+rm -rf *
+```
+5. There are two ways to register sys.path for loading zip-archive.
+The first way is to register in python3xx.pth. Add the content as follows.
+```python
+./lib/site-packages.torch.v2.3.1+cu118.zip
+```
+The second method is to add dynamically. Add it to sys.path in python colsole as shown below.
+```python
+import os, sys
+sys.path.append(os.path.join(os.getcwd(), "lib/site-packages.torch.v2.3.1+cu118.zip"))
+```
+You can check that both are registered through sys.path.
+```python
+>>> for i in range(len(sys.path)) : print(f"[{i}] : {sys.path[i]}")
+[0] : X:\python\portable.python.v3.11.09.x64.win
+[1] : X:\python\portable.python.v3.11.09.x64.win\python311.zip
+[2] : X:\python\portable.python.v3.11.09.x64.win\DLLs
+[3] : X:\python\portable.python.v3.11.09.x64.win\Lib
+[4] : X:\python\portable.python.v3.11.09.x64.win\lib\site-packages
+[5] : X:\python\portable.python.v3.11.09.x64.win\lib\site-packages.pip.zip
+[6] : X:\python\portable.python.v3.11.09.x64.win\lib\site-packages.zimport.v0.1.zip
+[7] : X:\python\portable.python.v3.11.09.x64.win\lib/site-packages.torch.v2.3.1+cu118.zip
 ```
 
 
