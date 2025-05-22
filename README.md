@@ -4,7 +4,7 @@ zimport is used to load and manage python packages from zip-archives.
 in other words, it allows you to manage python packages like java jars.
 and, it supports not only reading files inside zip-archive, but also dynamic library(.dll, .pyd, .so) loading.
 
-In that sense, it can be seen as an improved version of Python's basic zipimport.
+In that sense, it can be seen as an improved version of Python's default zipimport.
 
 zimport has been tested on python v3.8 to v3.12, on windows/linux.
 also, when I tested it on various versions of pytorch, pandas, onnx, scipy, and scikitrun, it worked without any problems.
