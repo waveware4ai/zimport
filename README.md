@@ -12,7 +12,7 @@ also, when I tested it on various versions of pytorch, pandas, onnx, scipy, and 
 Additionally, you can create the most convenient environment possible when using it with PortablePython at the link below.  
 https://github.com/waveware4ai/PortablePython  
 
-If users find bugs or problems while using the library, please leave an Issue.
+If Users find bugs or problems while using the library, please leave an Issue.
 
 History
 ------------
