@@ -9,6 +9,9 @@ In that sense, it can be seen as an improved version of Python's default zipimpo
 zimport has been tested on python v3.8 to v3.12, on windows/linux.
 also, when I tested it on various versions of pytorch, pandas, onnx, scipy, and scikitrun, it worked without any problems.
 
+Additionally, you can create the most convenient environment possible when using it with PortablePython at the link below.
+https://github.com/waveware4ai/PortablePython  
+
 If users find bugs or problems while using the library, please leave an Issue.
 
 History
