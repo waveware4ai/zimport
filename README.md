@@ -13,9 +13,31 @@ History
 ------------
 2025/05/21 v0.1 released
 
-Installation
+Installation (pip install)
 ------------
-
+1. using pip
+```python
+python -m pip install zimport
+Collecting zimport
+  Downloading zimport-0.1.0-py3-none-any.whl.metadata (5.5 kB)
+Downloading zimport-0.1.0-py3-none-any.whl (32 kB)
+Installing collected packages: zimport
+Successfully installed zimport-0.1.0
+```
+2. run python console then, type 'import zimport'
+```python
+X:\portable.python.v3.11.09.x64.win>python
+Python 3.11.9 (tags/v3.11.9:de54cf5, Apr  2 2024, 10:12:12) [MSC v.1938 64 bit (AMD64)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import zimport
+[INF] zimport installed ...
+[INF] zimport cache_dir ::: [X:/portable.python.v3.11.09.x64.win/.cache] from find('.cache')
+>>> zimport.__version__
+'0.1'
+>>>
+```
+Installation (manual install)
+------------
 1. copy zimport.zip to [python excutable path]/lib
 2. append [python excutable path]/python3xx.pth (for python 3.11 python311.pth)
 ```python
