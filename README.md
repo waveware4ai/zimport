@@ -7,7 +7,7 @@ and, it supports not only reading files inside zip-archive, but also dynamic lib
 zimport has been tested on python v3.8 to v3.12, on windows/linux.
 also, when I tested it on various versions of pytorch, pandas, onnx, scipy, and scikitrun, it worked without any problems.
 
-If users find bugs or problems while using the app, please leave an Issue.
+If users find bugs or problems while using the library, please leave an Issue.
 
 History
 ------------
