@@ -71,7 +71,10 @@ python -c "import torch;print(torch.__version__);print(torch.cuda.is_available()
 True
 NVIDIA GeForce RTX 2080
 ```
-4. Now go into site-packages and zip-archive all the files and empty site-packages
+4. Now go into site-packages and zip-archive all the files and empty site-packages.  
+   When compressing, you can compress it with the extension [.zip] or [.z],
+   Personally, I prefer [.z] because Windows systems recognize [.zip] as a zip folder and perform caching.
+   If there are a lot of files inside [.zip], it may cause a system crash on Windows systems.
 ```python
 cd [python excutable path]/lib/site-packages
 zip -r ../site-packages.torch.v2.3.1+cu118.zip *
@@ -99,7 +102,7 @@ You can check that both are registered through sys.path.
 [6] : X:\python\portable.python.v3.11.09.x64.win\lib\site-packages.zimport.v0.1.zip
 [7] : X:\python\portable.python.v3.11.09.x64.win\lib/site-packages.torch.v2.3.1+cu118.zip
 ```
-6. The final step is to import the pytorch module.
+6. The final step is to import the pytorch zip-archive module.
 ```
 >>> import zimport, os, sys
 [INF] zimport installed ...
