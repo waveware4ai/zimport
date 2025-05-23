@@ -77,18 +77,18 @@ NVIDIA GeForce RTX 2080
    If there are a lot of files inside [.zip], this may cause unnecessary overhead or system crashes on Windows systems.
 ```python
 cd [python excutable path]/lib/site-packages
-zip -r ../site-packages.torch.v2.3.1+cu118.zip *
+zip -r ../site-packages.torch.v2.3.1+cu118.win.zip *
 rm -rf *
 ```
 5. There are two ways to register sys.path for loading zip-archive.
 The first way is to register in python3xx.pth. Add the content as follows.
 ```python
-./lib/site-packages.torch.v2.3.1+cu118.zip
+./lib/site-packages.torch.v2.3.1+cu118.win.zip
 ```
 The second method is to add dynamically. Add it to sys.path in python colsole as shown below.
 ```python
 import os, sys
-sys.path.append(os.path.join(os.getcwd(), "lib/site-packages.torch.v2.3.1+cu118.zip"))
+sys.path.append(os.path.join(os.getcwd(), "lib/site-packages.torch.v2.3.1+cu118.win.zip"))
 ```
 You can check that both are registered through sys.path.
 ```python
@@ -100,14 +100,14 @@ You can check that both are registered through sys.path.
 [4] : X:\python\portable.python.v3.11.09.x64.win\lib\site-packages
 [5] : X:\python\portable.python.v3.11.09.x64.win\lib\site-packages.pip.zip
 [6] : X:\python\portable.python.v3.11.09.x64.win\lib\site-packages.zimport.v0.1.zip
-[7] : X:\python\portable.python.v3.11.09.x64.win\lib/site-packages.torch.v2.3.1+cu118.zip
+[7] : X:\python\portable.python.v3.11.09.x64.win\lib/site-packages.torch.v2.3.1+cu118.win.zip
 ```
 6. The final step is to import the pytorch zip-archive module.
 ```
 >>> import zimport, os, sys
 [INF] zimport installed ...
 [INF] zimport cache_dir ::: [X:/python/portable.python.v3.11.09.x64.win/.cache] from find('.cache')
->>> sys.path.append(os.path.join(os.getcwd(), "lib/site-packages.torch.v2.3.1+cu118.zip"))
+>>> sys.path.append(os.path.join(os.getcwd(), "lib/site-packages.torch.v2.3.1+cu118.win.zip"))
 >>> import torch
 >>> print(torch.__version__)
 2.3.1+cu118
