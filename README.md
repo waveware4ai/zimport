@@ -74,7 +74,7 @@ NVIDIA GeForce RTX 2080
 4. Now go into site-packages and zip-archive all the files and empty site-packages.  
    When compressing, you can compress it with the extension [.zip] or [.z],
    Personally, I prefer [.z] because Windows systems recognize [.zip] as a zip folder and perform caching.
-   If there are a lot of files inside [.zip], it may cause a system crash on Windows systems.
+   If there are a lot of files inside [.zip], this may cause unnecessary overhead or system crashes on Windows systems.
 ```python
 cd [python excutable path]/lib/site-packages
 zip -r ../site-packages.torch.v2.3.1+cu118.zip *
