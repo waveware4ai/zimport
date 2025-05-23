@@ -56,6 +56,64 @@ X:\portable.python.v3.11.09.x64.win>python
 '0.1'
 >>>
 ```
+Example (read resource in zip) 
+------------
+1. First, paste [ReadResource] folder inside [examples/exam.01] into site-package.
+2. __init__.py inside ReadResource has simple contents as follows.
+```python
+import sys, io, os
+def read() :
+    path = os.path.dirname(os.path.abspath(__file__))
+    #print(path)
+    f = open(os.path.join(path, "config.ini"), 'r')
+    while True:
+        line = f.readline()
+        if not line: break
+        print(line.strip())
+    f.close()
+```
+3. If you run the code, you will see the following result:
+```python
+X:\portable.python.v3.11.09.x64.win>python
+>>> import ReadResource
+>>> ReadResource.read()
+[1] This
+[2] is a
+[3] resource
+[4] inner
+[5] package
+>>> 
+```
+4. Next, compress the [ReadResource] folder to ../site-packages.ReadResource.z and delete the [ReadResource] folder.
+5. If you run python and do the same, you can see that it cannot read internal resources.
+```python
+X:\portable.python.v3.11.09.x64.win>python
+>>> import os, sys
+>>> sys.path.append(os.path.join(os.getcwd(), "lib/site-packages.ReadResource.z"))
+>>> import ReadResource
+>>> ReadResource.read()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "X:\portable.python.v3.11.09.x64.win\lib\site-packages.ReadResource.z\ReadResource\__init__.py", line 6, in read
+FileNotFoundError: [Errno 2] No such file or directory: 'X:\\portable.python.v3.11.09.x64.win\\lib\\site-packages.ReadResource.z\\ReadResource\\config.ini'
+>>>
+```
+6. zimport was developed to allow normal reading of internal resources.
+```python
+X:\!test\portable.python.v3.11.09.x64.win>python
+>>> import zimport
+[INF] zimport installed ...
+[INF] zimport cache_dir ::: [X:/!test/portable.python.v3.11.09.x64.win/.cache] from find('.cache')
+>>> import os, sys
+>>> sys.path.append(os.path.join(os.getcwd(), "lib/site-packages.ReadResource.z"))
+>>> import ReadResource
+>>> ReadResource.read()
+[1] This
+[2] is a
+[3] resource
+[4] inner
+[5] package
+```
 Example (build pytorch zip-archive) 
 ------------
 1. delete or move all files in [python excutable path]/lib/site-packages to another location.
