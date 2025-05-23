@@ -58,7 +58,7 @@ X:\portable.python.v3.11.09.x64.win>python
 ```
 Example (read resource in zip) 
 ------------
-1. First, paste [ReadResource] folder inside [examples/exam.01] into site-package.
+1. First, paste [ReadResource] folder inside [examples/exam.01] into [lib/site-package] folder.
 2. \_\_init\_\_.py inside ReadResource has simple contents as follows.
 ```python
 import sys, io, os
