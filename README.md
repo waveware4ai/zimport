@@ -16,8 +16,8 @@ If Users find bugs or problems while using the library, please leave an Issue.
 
 History
 ------------
-2025/05/21 v0.1.0 : initial released
-2025/05/26 v0.1.1 : support macosx, some minor bug fix
+2025/05/21 v0.1.0 : initial released  
+2025/05/26 v0.1.1 : support macosx, some minor bug fix  
 
 Installation (pip install)
 ------------
