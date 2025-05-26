@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1 20240922
+# zimport v0.1.1 20250526
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -72,9 +72,18 @@ def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
                     os.makedirs(new_path, exist_ok=True)
                 elif ent_path in zip_list:
                     print("[HOOK:::zip] cache {} [{}]".format(name, new_path), file=sys.stderr)
-                    zip_file = zipfile.ZipFile(zip_path)
-                    zip_file.extract(ent_path, ZIPCACHED_DIR(zip_path))
-                    zip_file.close()
+                    #zip_file = zipfile.ZipFile(zip_path)
+                    #zip_file.extract(ent_path, ZIPCACHED_DIR(zip_path))
+                    #zip_file.close()
+                    try:
+                        with zipfile.ZipFile(zip_path) as zip_file:
+                            zip_file.extract(ent_path, ZIPCACHED_DIR(zip_path))
+                    except FileNotFoundError:
+                        print(f"[HOOK:::zip][ERROR] zip file not found: {zip_path}", file=sys.stderr)
+                    except zipfile.BadZipFile:
+                        print(f"[HOOK:::zip][ERROR] bad zip file: {zip_path}", file=sys.stderr)
+                    except Exception as e:
+                        print(f"[HOOK:::zip][ERROR] extracting {ent_path} from {zip_path}: {e}", file=sys.stderr)                    
             args = tuple([(new_path if isString else pathlib.Path(new_path)) if idx == 0 else v for idx, v in enumerate(args)])
             return args, hook(*args, **kwargs)
         else :
@@ -89,9 +98,18 @@ def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
                         os.makedirs(new_path, exist_ok=True)
                     elif ent_path in zip_list:
                         print("[HOOK:::zip] cache {} [{}]".format(name, new_path), file=sys.stderr)
-                        zip_file = zipfile.ZipFile(zip_path)
-                        zip_file.extract(ent_path, ZIPCACHED_DIR(zip_path))
-                        zip_file.close()
+                        #zip_file = zipfile.ZipFile(zip_path)
+                        #zip_file.extract(ent_path, ZIPCACHED_DIR(zip_path))
+                        #zip_file.close()
+                        try:
+                            with zipfile.ZipFile(zip_path) as zip_file:
+                                zip_file.extract(ent_path, ZIPCACHED_DIR(zip_path))
+                        except FileNotFoundError:
+                            print(f"[HOOK:::zip][ERROR] zip file not found: {zip_path}", file=sys.stderr)
+                        except zipfile.BadZipFile:
+                            print(f"[HOOK:::zip][ERROR] bad zip file: {zip_path}", file=sys.stderr)
+                        except Exception as e:
+                            print(f"[HOOK:::zip][ERROR] extracting {ent_path} from {zip_path}: {e}", file=sys.stderr)
                 args = tuple([(new_path if isString else pathlib.Path(new_path)) if idx == 0 else v for idx, v in enumerate(args)])
                 return args, hook(*args, **kwargs)
             stat = entries[neopath]

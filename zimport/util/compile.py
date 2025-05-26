@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1 20240922
+# zimport v0.1.1 20250526
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -15,6 +15,7 @@ import marshal
 from importlib import _bootstrap
 from importlib import _bootstrap_external
 from .zip import getbytes, _unpack_uint32
+from typing import Optional, Tuple # typing added in version 3.5, https://docs.python.org/3/library/typing.html
 
 def compile_from_py(fullpath, src) : # fullpath : a/b/c.z/d/e.py, src : plain-text
     src = src.replace(b'\r\n', b'\n').replace(b'\r', b'\n') #_normalize_line_endings(source)
@@ -62,9 +63,11 @@ UNMARSHAL_CODE_TYPE = type(unmarshal_from_pyc.__code__)
 
 ########################################
 
-def get_source_code_by_pyc(self, path):
-    assert path[-1:] in ('c', 'o')  # strip 'c' or 'o' from *.py[co]
-    path = path[:-1] # pyc to py
+def get_source_code_by_pyc(self, path) -> Optional[bytes] :
+    #assert path[-1:] in ('c', 'o')  # strip 'c' or 'o' from *.py[co]
+    if not path or path[-1:] not in ('c', 'o'):
+        return None
+    path = path[:-1] # pyc, pyo to py
     if (path in self.zent) :
         ntry = self.zent[path]
         data = getbytes(self.real, ntry)
@@ -72,9 +75,11 @@ def get_source_code_by_pyc(self, path):
     else :
         return None
 
-def get_time_and_size_of_py(self, path):
-    assert path[-1:] in ('c', 'o')  # strip 'c' or 'o' from *.py[co]
-    path = path[:-1]
+def get_time_and_size_of_py(self, path) -> Tuple[int, int] :
+    #assert path[-1:] in ('c', 'o')  # strip 'c' or 'o' from *.py[co]
+    if not path or path[-1:] not in ('c', 'o'):
+        return None
+    path = path[:-1] # pyc, pyo to py
     if (path in self.zent) :
         ntry = self.zent[path]  # entry
         time = int(ntry["tme"]) # timestamp

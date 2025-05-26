@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1 20240922
+# zimport v0.1.1 20250526
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -189,7 +189,7 @@ class zimport(object):
             pth = zip + "/" + pyd  # zipped path. ie, library.dir/x.y.z/a/b/c.cp311-win_amd64.pyd
             pth = path(zip + "/" + pyd)  # cached path. ie, library.dir/.cache/x.y.z/a/b/c.cp311-win_amd64.pyd
             unq.add(os.path.dirname(pth))
-        lst = [p for p in ent if (p.endswith(".dll") or p.endswith(".so") or (".so." in p))]
+        lst = [p for p in ent if (p.endswith(".dll") or p.endswith(".so") or (".so." in p) or p.endswith(".dylib"))]
         tmp = [p.replace('/', '.') for p in lst]
         for idx in range(len(lst)):
             dll = lst[idx]  # a/b/c.dll'
@@ -279,7 +279,7 @@ def precache_dll(dll, debug=True) : # preload pyd, dll, so
     def copy(p) : f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
     for z in zim.ZIP_NTRY_INFO:
         lst = zim.ZIP_NTRY_INFO[z]
-        lst = [z + "/" + p for p in lst if (p.endswith(".dll") or p.endswith(".so") or (".so." in p) or p.endswith(".pyd") or p.endswith(".exe"))]
+        lst = [z + "/" + p for p in lst if (p.endswith(".dll") or p.endswith(".so") or (".so." in p) or p.endswith(".dylib") or p.endswith(".pyd") or p.endswith(".exe"))]
         lst = [z + "/" + p for p in lst if p.endswith(fle)]
         for fle in lst:
             pth = copy(fle)

@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1 20240922
+# zimport v0.1.1 20250526
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -116,7 +116,7 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
                 if DBG : print(f"[INF:::pathfinder] exec_module : replace [{spec.origin}] to [{replace_pyd}]", file=sys.stderr)
                 spec.origin = replace_pyd
 
-        if spec.origin.endswith(".pyd") or spec.origin.endswith(".so") : # 20250514 linux patch
+        if spec.origin.endswith(".pyd") or spec.origin.endswith(".so") or (".so." in spec.origin) or spec.origin.endswith(".dylib") : # 20250514 linux patch
             def path(p): f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
             name = path(spec.origin);
             #import imp

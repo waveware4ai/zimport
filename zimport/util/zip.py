@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1 20240922
+# zimport v0.1.1 20250526
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -7,7 +7,7 @@
 import os, sys, time, timeit
 import io, _io
 import zlib, zipfile
-
+import typing # typing added in version 3.5, https://docs.python.org/3/library/typing.html
 
 from importlib import abc
 from importlib import _bootstrap
@@ -45,12 +45,10 @@ SIG_END_ARCHIVE = b'\x50\x4B\x05\x06'
 CENTRAL_DIR_SZE = 22
 MAX_COMMENT_LEN = (1 << 16) - 1
 
-def is_ziparchive(p) :
-    if p.endswith(".z") or p.endswith(".zip"):
-        return True # or p.endswith(".zip") : return True
-    else : return False
+def is_ziparchive(p) -> bool :
+    return p.endswith(".z") or p.endswith(".zip")
 
-def is_ziparchive_deep(p) :
+def is_ziparchive_deep(p) -> bool :
     try:
         with io.open(p, "rb") as z:
             byte = z.read(4)
@@ -326,7 +324,7 @@ def datetime(d, t):
 
 ########################################
 
-def test1() :
+def testcase1() :
     SETUP_CODE = '''
 import os, sys    
 from zimport.util.zip import zipentries
@@ -352,7 +350,7 @@ print('.', end='')
     print(f"[INF] min({min(val)}) ~ max({max(val)})")
     # [INF] min(0.13779499999873224) ~ max(0.140073399998073)
 
-def test2() :
+def testcase2() :
     path = os.path.dirname(sys.executable) + "/lib/site-packages.additional.z"
     dict = zipentriesbycase(path, True, False, False, False)
     ntry = dict['pydub/audio_segment.py']
@@ -363,7 +361,7 @@ def test2() :
         b.write(byte)
     print("end of job")
 
-def test3() :
+def testcase3() :
     SETUP_CODE = '''
 import os, sys
 import marshal
@@ -399,8 +397,9 @@ print('.', end='')
     # ok reuse fd and unmarshal : [INF] min(1.310854899998958) ~ max(1.372702799999388)
     # ok reuse fd and compile   : [INF] min(12.60920729999998) ~ max(13.583235800000693)
 if __name__ == "__main__":
-    test1()
-    # test2()
-    # test3()
+    # testcase1()
+    # testcase2()
+    # testcase3()
+    pass
 
 
