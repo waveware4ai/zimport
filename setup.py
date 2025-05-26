@@ -8,7 +8,7 @@ setup(
     description='zimport is used to load and manage python packages from zip-archives.',
     keywords='python import package zip pyd',
     url='https://github.com/waveware4ai/zimport',
-    long_description=open('README.md', 'r').read(),
+    long_description=open('README.md', 'r', encoding='UTF8').read(),
     long_description_content_type='text/markdown',
     license='GPL-3.0 license',
     python_requires='>=3.8',   
