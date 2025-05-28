@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.1 20250526
+# zimport v0.1.2 20250528
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -77,6 +77,9 @@ def get_module_code(self, fullname : str):
                 cachedtemp = (path + new_suffix).split('/')
                 cachedtemp.insert(len(cachedtemp) - 1, "__pycache__")
                 pycached = ('/').join(cachedtemp)
+
+        #if suffix == '.pyc' : continue # test code
+        #if suffix == '.pyc' and path.endswith('config') : continue # test code
 
         if pycached in self.zent :
             ntry = self.zent[pycached]

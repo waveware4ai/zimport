@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.1 20250526
+# zimport v0.1.2 20250528
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -54,7 +54,6 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
                 spec = None # the module cannot be found.
         else:
             mod_path = pathfinder_impl.get_module_filename(self, fullname)  # 14mhz
-
             if mod_path.endswith(".pyd") :
                 spec = BOOTSTRAP.modulespec(fullname, self, origin=mod_path, is_package=False)
             else :
@@ -73,7 +72,7 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
     def get_code(self, fullname):
         code, ispackage, mod_path = pathfinder_impl.get_module_code(self, fullname)
         if DBG : print(f"[INF:::pathfinder] get_code : {self.real.rpartition('/')[2]}:::{self.virt}:::{fullname} -> {mod_path.rpartition('/')[2]}")
-        return code
+        return code, ispackage, mod_path
 
     def get_data(self, pathname):
         data, mod_path = pathfinder_impl.get_data(self, pathname)
@@ -100,6 +99,9 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
         module.__spec__ = spec
         return module
 
+    def load_module(self, fullname): #deprecated method
+        pass
+
     def exec_module(self, module):
         spec = module.__spec__
 
@@ -109,7 +111,7 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
 
         if DBG: print(f"[INF:::pathfinder] exec_module : {spec.name} ::: {spec.origin}")
 
-        if spec.origin.endswith("__init__.py") : # 20240930 pyworld patch
+        if spec.origin.endswith("__init__.py") : # 20240930 pyworld patch load 'package/package.cp312-win_amd64.pyd'
             pydname = '/'.join([spec.name, spec.name.rpartition('.')[2] + pathfinder_impl._PYTHON__PY_DLL_])
             if pydname in self.zent :
                 replace_pyd = '/'.join([self.real, pydname])
@@ -118,16 +120,30 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
 
         if spec.origin.endswith(".pyd") or spec.origin.endswith(".so") or (".so." in spec.origin) or spec.origin.endswith(".dylib") : # 20250514 linux patch
             def path(p): f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
-            name = path(spec.origin);
+            name = path(spec.origin)
             #import imp
             #m = imp.load_dynamic(module.__name__, name) # imp deprecated since version 3.4, removed in version 3.12.
             m = self.custom_load_dynamic(module.__name__, name)
             if DBG : print(f"[INF:::exec_module@pathfinder] load {[name,]}", file=sys.stderr)
             return m
         else :
-            code = self.get_code(module.__name__)
+            code, ispackage, mod_path = self.get_code(module.__name__)
             if code is None: raise ImportError('cannot load module {!r} when get_code() returns None'.format(module.__name__))
-            BOOTSTRAP.call_with_frames_removed(spec.origin, exec, code, module.__dict__)
+            try:
+                exec(code, module.__dict__) # 20250528 patch
+            except Exception :
+                try:
+                    if DBG : print(f"[INF:::exec_module] exec failed [{mod_path}] ...")
+                    #BOOTSTRAP.exec(spec, module)
+                    #from importlib import _bootstrap
+                    #from importlib import _bootstrap_external
+                    #spec.loader.load_module(module.__name__)
+                    #spec.loader.exec_module(module)
+                    #_bootstrap.BuiltinImporter().exec_module(module)
+                    pass
+                except Exception as e:
+                    #code, ispackage, mod_path = pathfinder_impl.get_module_code(self, module.__name__)
+                    print(f"[ERR:::exec_module] err [{e}] to [{mod_path}] ...", file=sys.stderr)
 
     def load_module(self, fullname):
         return BOOTSTRAP.load_module_shim(self, fullname)
@@ -136,7 +152,7 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
     #https://stackoverflow.com/questions/24166080/importing-dll-into-python-3-without-imp-load-dynamic
     #https://docs.python.org/3/library/importlib.html#importing-a-source-file-directly
     def custom_load_dynamic(name, path, fullname):
-        if DBG : print(f"[INF:::custom_load_dynamic@pathfinder] name[{name}] path[{path}] file[{file}]")
+        if DBG : print(f"[INF:::custom_load_dynamic@pathfinder] name[{name}] path[{path}] file[{fullname}]")
         spc = importlib.util.spec_from_file_location(path, fullname)
         mod = importlib.util.module_from_spec(spc)
         sys.modules[path] = mod

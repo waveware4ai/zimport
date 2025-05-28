@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.1 20250526
+# zimport v0.1.2 20250528
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -18,9 +18,13 @@ from .zip import getbytes, _unpack_uint32
 from typing import Optional, Tuple # typing added in version 3.5, https://docs.python.org/3/library/typing.html
 
 def compile_from_py(fullpath, src) : # fullpath : a/b/c.z/d/e.py, src : plain-text
-    src = src.replace(b'\r\n', b'\n').replace(b'\r', b'\n') #_normalize_line_endings(source)
-    code = compile(src, fullpath, 'exec', dont_inherit=True)
-    return code
+    try:
+        src = src.replace(b'\r\n', b'\n').replace(b'\r', b'\n')  # _normalize_line_endings(source)
+        bin = compile(src, fullpath, 'exec', dont_inherit=True)
+        return bin
+    except Exception as e:
+        if True: print(f"[ERR:::compile] [{e}] in [{fullpath}] ...", file=sys.stderr)
+        return None
 
 NUMBA_CHK_FOR_RECOMPILE = True
 ALL_PY_FORCED_RECOMPILE = False

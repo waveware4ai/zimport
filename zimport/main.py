@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.1 20250526
+# zimport v0.1.2 20250528
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -189,7 +189,7 @@ class zimport(object):
             pth = zip + "/" + pyd  # zipped path. ie, library.dir/x.y.z/a/b/c.cp311-win_amd64.pyd
             pth = path(zip + "/" + pyd)  # cached path. ie, library.dir/.cache/x.y.z/a/b/c.cp311-win_amd64.pyd
             unq.add(os.path.dirname(pth))
-        lst = [p for p in ent if (p.endswith(".dll") or p.endswith(".so") or (".so." in p) or p.endswith(".dylib"))]
+        lst = [p for p in ent if (p.endswith(".dll") or p.endswith(".so") or (".so." in p) or p.endswith(".dylib") or p.endswith(".exe"))]
         tmp = [p.replace('/', '.') for p in lst]
         for idx in range(len(lst)):
             dll = lst[idx]  # a/b/c.dll'
