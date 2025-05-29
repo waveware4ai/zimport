@@ -18,8 +18,8 @@ History
 ------------
 2025/05/21 v0.1.0 : initial released  
 2025/05/26 v0.1.1 : support macosx, some minor bug fix  
-2025/05/28 v0.1.2 : bug fix  
-2025/05/29 v0.1.3 : bug fix  
+2025/05/28 v0.1.2 : some minor bug fix  
+2025/05/29 v0.1.3 : bug fix (yaml package)
 
 Installation (pip install)
 ------------
