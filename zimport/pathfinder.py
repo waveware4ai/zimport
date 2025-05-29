@@ -1,11 +1,11 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.2 20250528
+# zimport v0.1.3 20250528
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
 #-------------------------------------------------------------------------------
 import io, os, sys, importlib, time
-
+import traceback
 import zimport.util.zip as ZIP
 import zimport.util.bootstrap as BOOTSTRAP
 import zimport.util.path as PATH
@@ -25,6 +25,7 @@ DBG = False
 
 class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
     def __init__(self, path):
+        path = os.path.abspath(path) # a/b/./c to a/b/c, a/../a/./b/c to a/b/c #20250529
         path = path.replace('\\', '/') if path is not None else None
         real, virt = PATH.virtual_path_split(path)
         if not isinstance(path, str):
@@ -64,12 +65,12 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
 
     ########################################
 
-    def get_filename(self, fullname):
+    def get_filename(self, fullname) :
         mod_path = pathfinder_impl.get_module_filename(self, fullname) #14mhz
         if DBG : print(f"[INF:::pathfinder] get_filename : {self.real.rpartition('/')[2]}:::{self.virt}:::{fullname} -> {mod_path.rpartition('/')[2]}")
         return mod_path
 
-    def get_code(self, fullname):
+    def get_code(self, fullname) :
         code, ispackage, mod_path = pathfinder_impl.get_module_code(self, fullname)
         if DBG : print(f"[INF:::pathfinder] get_code : {self.real.rpartition('/')[2]}:::{self.virt}:::{fullname} -> {mod_path.rpartition('/')[2]}")
         return code, ispackage, mod_path
@@ -79,22 +80,22 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
         if DBG : print(f"[INF:::pathfinder] get_data : {self.real.rpartition('/')[2]}:::{self.virt}:::{pathname} -> {mod_path.rpartition('/')[2]}")
         return data
 
-    def get_source(self, fullname):# the source code for the specified module
+    def get_source(self, fullname) : # the source code for the specified module
         src, mod_path = pathfinder_impl.get_source(self, fullname)
         if DBG : print(f"[INF:::pathfinder] get_source : {self.real.rpartition('/')[2]}:::{self.virt}:::{fullname} -> {mod_path.rpartition('/')[2]}")
         return src
 
-    def get_resource_reader(self, fullname):
+    def get_resource_reader(self, fullname) :
         reader = pathfinder_impl.get_resource_reader(self, fullname)
         if DBG : print(f"[INF:::pathfinder] get_resource_reader : {self.real.rpartition('/')[2]}:::{self.virt}:::{fullname}")
         return reader
 
     ########################################
 
-    def is_package(self, fullname):
+    def is_package(self, fullname) :
         pass
 
-    def create_module(self, spec):
+    def create_module(self, spec) :
         module = types.ModuleType(spec.name)
         module.__spec__ = spec
         return module
@@ -129,11 +130,13 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
         else :
             code, ispackage, mod_path = self.get_code(module.__name__)
             if code is None: raise ImportError('cannot load module {!r} when get_code() returns None'.format(module.__name__))
+            spec._cached = mod_path
             try:
-                exec(code, module.__dict__) # 20250528 patch
-            except Exception :
+                exec(code, module.__dict__) # mainly exec works here ...
+            except Exception as e1:
                 try:
-                    if DBG : print(f"[INF:::exec_module] exec failed [{mod_path}] ...")
+                    if False : traceback.print_exc()
+                    if DBG : print(f"[INF:::exec_module] failed [{e1}] to [{mod_path}] ...")
                     #BOOTSTRAP.exec(spec, module)
                     #from importlib import _bootstrap
                     #from importlib import _bootstrap_external
@@ -141,9 +144,9 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
                     #spec.loader.exec_module(module)
                     #_bootstrap.BuiltinImporter().exec_module(module)
                     pass
-                except Exception as e:
+                except Exception as e2:
                     #code, ispackage, mod_path = pathfinder_impl.get_module_code(self, module.__name__)
-                    print(f"[ERR:::exec_module] err [{e}] to [{mod_path}] ...", file=sys.stderr)
+                    print(f"[ERR:::exec_module] err [{e2}] to [{mod_path}] ...", file=sys.stderr)
 
     def load_module(self, fullname):
         return BOOTSTRAP.load_module_shim(self, fullname)

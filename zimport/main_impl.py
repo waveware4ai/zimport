@@ -1,17 +1,16 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.2 20250528
+# zimport v0.1.3 20250528
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
 #-------------------------------------------------------------------------------
-import io, os, sys, time
+import io, os, sys, time, shutil
 import zipfile
 import pathlib
 from .util.zip import zipstaties
 from .util.path import path_exists_native, find
 
 DBG = False
-
 
 ########################################
 
@@ -24,7 +23,27 @@ def is_zip_path(path) : # return just true, path == a.zip/a/b/c.x
     return True
 
 ########################################
+def extract(zip_path, zip_cached_path, ent_path) :
+    try:
+        with zipfile.ZipFile(zip_path) as zip_file:
+            zip_file.extract(ent_path, zip_cached_path)
+    except FileNotFoundError:
+        print(f"[HOOK:::zip][ERROR] zip file not found: {zip_path}", file=sys.stderr)
+    except zipfile.BadZipFile:
+        print(f"[HOOK:::zip][ERROR] bad zip file: {zip_path}", file=sys.stderr)
+    except Exception as e:
+        print(f"[HOOK:::zip][ERROR] extracting {ent_path} from {zip_path}: {e}", file=sys.stderr)
 
+def extract_post(bin_path) :
+    if not os.path.exists(bin_path) : return
+    path_only = bin_path[:bin_path.rfind('/')] # a/b/c/d.exe to a/b/c
+    name_only = bin_path[bin_path.rfind('/'):] # a/b/c/d.exe to /d.exe
+    if name_only.endswith('.exe') :
+        if ('ffmpeg' in name_only) : # case of ffmpeg-win-x86_64-v?.?.exe to ffmpeg.exe
+            shutil.copy(bin_path, ''.join([path_only , '/ffmpeg.exe']))
+    pass
+
+########################################
 def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
     ZIP_NTRY_INFO = zimport.ZIP_NTRY_INFO
     ZIP_STAT_INFO = zimport.ZIP_STAT_INFO
@@ -38,10 +57,10 @@ def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
         if path.startswith('.'): return hook(*args, **kwargs)  # relative path
         if is_zip_path(path):
             args, ret = bypass(hook, name, *args, **kwargs)
-            if DBG : print("[HOOK:::zip] {} {}, {}".format(name, args, kwargs), file = sys.stderr if is_stderr_print else sys.stdout)
+            if DBG : print("[HOOK:z:zip] {} {}, {}".format(name, args, kwargs), file = sys.stderr if is_stderr_print else sys.stdout)
         else:
             ret = hook(*args, **kwargs)
-            if DBG : print("[HOOK:::org] {} {}, {}".format(name, args, kwargs), file = sys.stderr if is_stderr_print else sys.stdout)
+            if DBG : print("[HOOK:x:org] {} {}, {}".format(name, args, kwargs), file = sys.stderr if is_stderr_print else sys.stdout)
         return ret
 
     def funcwithpath(*args, **kwargs):  # for sklearn
@@ -50,10 +69,10 @@ def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
         if path.startswith('.'): return hook(*args, **kwargs)  # relative path
         if is_zip_path(path):
             args, ret = bypass(hook, name, *args, **kwargs)
-            if DBG : print("[HOOK:::zip] {} {}, {}".format(name, args, kwargs), file = sys.stderr if is_stderr_print else sys.stdout)
+            if DBG : print("[HOOK:z:zip] {} {}, {}".format(name, args, kwargs), file = sys.stderr if is_stderr_print else sys.stdout)
         else:
             ret = hook(*args, **kwargs)
-            if DBG : print("[HOOK:::zip] {} {}, {}".format(name, args, kwargs), file = sys.stderr if is_stderr_print else sys.stdout)
+            if DBG : print("[HOOK:x:zip] {} {}, {}".format(name, args, kwargs), file = sys.stderr if is_stderr_print else sys.stdout)
         return ret
 
     def bypass(hook, name, *args, **kwargs):
@@ -72,9 +91,9 @@ def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
                     os.makedirs(new_path, exist_ok=True)
                 elif ent_path in zip_list:
                     print("[HOOK:::zip] cache {} [{}]".format(name, new_path), file=sys.stderr)
-                    #zip_file = zipfile.ZipFile(zip_path)
-                    #zip_file.extract(ent_path, ZIPCACHED_DIR(zip_path))
-                    #zip_file.close()
+                    extract(zip_path, ZIPCACHED_DIR(zip_path), ent_path)
+                    extract_post(''.join([ZIPCACHED_DIR(zip_path) , '/', ent_path]))
+                    '''
                     try:
                         with zipfile.ZipFile(zip_path) as zip_file:
                             zip_file.extract(ent_path, ZIPCACHED_DIR(zip_path))
@@ -83,7 +102,8 @@ def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
                     except zipfile.BadZipFile:
                         print(f"[HOOK:::zip][ERROR] bad zip file: {zip_path}", file=sys.stderr)
                     except Exception as e:
-                        print(f"[HOOK:::zip][ERROR] extracting {ent_path} from {zip_path}: {e}", file=sys.stderr)                    
+                        print(f"[HOOK:::zip][ERROR] extracting {ent_path} from {zip_path}: {e}", file=sys.stderr)      
+                    '''
             args = tuple([(new_path if isString else pathlib.Path(new_path)) if idx == 0 else v for idx, v in enumerate(args)])
             return args, hook(*args, **kwargs)
         else :
@@ -98,9 +118,9 @@ def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
                         os.makedirs(new_path, exist_ok=True)
                     elif ent_path in zip_list:
                         print("[HOOK:::zip] cache {} [{}]".format(name, new_path), file=sys.stderr)
-                        #zip_file = zipfile.ZipFile(zip_path)
-                        #zip_file.extract(ent_path, ZIPCACHED_DIR(zip_path))
-                        #zip_file.close()
+                        extract(zip_path, ZIPCACHED_DIR(zip_path), ent_path)
+                        extract_post(''.join([ZIPCACHED_DIR(zip_path), '/', ent_path]))
+                        '''
                         try:
                             with zipfile.ZipFile(zip_path) as zip_file:
                                 zip_file.extract(ent_path, ZIPCACHED_DIR(zip_path))
@@ -110,6 +130,7 @@ def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
                             print(f"[HOOK:::zip][ERROR] bad zip file: {zip_path}", file=sys.stderr)
                         except Exception as e:
                             print(f"[HOOK:::zip][ERROR] extracting {ent_path} from {zip_path}: {e}", file=sys.stderr)
+                        '''
                 args = tuple([(new_path if isString else pathlib.Path(new_path)) if idx == 0 else v for idx, v in enumerate(args)])
                 return args, hook(*args, **kwargs)
             stat = entries[neopath]
@@ -117,3 +138,18 @@ def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
     return funcwithstring if is_string_path else funcwithpath
 
 ########################################
+def detour(zimport, hookname : str, orgfunc) :
+    ZIP_NTRY_INFO = zimport.ZIP_NTRY_INFO
+    ZIP_STAT_INFO = zimport.ZIP_STAT_INFO
+    ZIPCACHED_DIR = zimport.cached_dir
+
+    def hook(*args, **kwargs) :
+        str_path = args[0] if type(args[0]) is str else args[0].as_posix()
+        unixpath = os.path.abspath(str_path).replace('\\', '/') # a/./b/c to a/b/c
+        if not any(tok in unixpath for tok in ZIP_IMPORTED_STRING) : return orgfunc(*args, **kwargs)
+        if (hookname == "os.listdir") :
+            print(f"os.listdir --- {unixpath}", file=sys.stderr)
+            pass
+        ret = [] #orgfunc(*args, **kwargs)
+        return ret
+    return hook

@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.2 20250528
+# zimport v0.1.3 20250528
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -11,7 +11,7 @@ import io, _io
 from importlib import _bootstrap
 from importlib import _bootstrap_external
 
-def path_exists_native(p) :
+def path_exists_native(p) : # exists directory or file
     try : # refer to https://happytest-apidoc.readthedocs.io/en/latest/_modules/_frozen_importlib_external/
         stat = _bootstrap_external._path_stat(p)
         return True

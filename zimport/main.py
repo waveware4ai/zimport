@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.2 20250528
+# zimport v0.1.3 20250528
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -11,9 +11,10 @@
 import io, os, sys, importlib, time
 import ctypes
 import pathlib
-import builtins
+import builtins, tokenize
 
 from .main_impl import hook_fileio
+from .main_impl import detour
 from .util.path import path_exists_native, find
 from .util.zip import zipstaties
 import zimport.util.zip as ZIP
@@ -120,6 +121,8 @@ class zimport(object):
         ctypes.CDLL = hook_fileio(self, "cdll", True, True, ctypes.CDLL)
         pathlib.Path.read_text = hook_fileio(self, "read (path)", False, True, pathlib.Path.read_text)  # for sklearn
         pathlib.Path.read_bytes = hook_fileio(self, "bytes(path)", False, True, pathlib.Path.read_bytes)
+        tokenize._builtin_open = builtins.open # 20250520 torch/_dynamo/config.py patch
+        #os.listdir = detour(self, "os.listdir", os.listdir) # 20250521 transformers patch
         pass
 
     def install_importer(self):
@@ -237,6 +240,7 @@ def invalidate_caches():
     if True : sys.path_importer_cache.clear()
     if False : importlib.invalidate_caches()   # danger code
     cacheofpath.clear()
+
 def path_maker(ziparchive, org_path):
     if org_path in cacheofpath: return cacheofpath[org_path]  # search cache
     abs_path = os.path.abspath(org_path)
