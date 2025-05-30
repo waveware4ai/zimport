@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.3 20250528
+# zimport v0.1.4 20250531
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -24,13 +24,13 @@ _zip_searchorder = \
 (
     ('/__init__.pyc', True, True, False),
     ('/__init__.py', False, True, False),
-    # ('/__init__.pyi', False, True), # 요거 주석제거하면 pip 에서 에러, 그럼 pyi 로딩은 ?
+    #('/__init__.pyi', False, True, False), # Do not import, refer PEP-484 document
     ('.pyc', True, False, False),
     ('.py', False, False, False),
-    # ('.pyi', False, False),         # 요거 주석제거하면 pip 에서 에러, 그럼 pyi 로딩은 ?
+    #('.pyi', False, False, False),         # Do not import, refer PEP-484 document
     ('.pyd', False, False, True),
     (_PYTHON__PY_DLL_, False, False, True),
-)
+) # suffix, isbytecode, ispackage, isdll
 
 def get_path_for_module(self, fullname):
     return self.virt + fullname.rpartition('.')[2]

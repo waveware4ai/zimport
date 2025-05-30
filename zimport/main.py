@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.3 20250528
+# zimport v0.1.4 20250531
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -122,6 +122,11 @@ class zimport(object):
         pathlib.Path.read_text = hook_fileio(self, "read (path)", False, True, pathlib.Path.read_text)  # for sklearn
         pathlib.Path.read_bytes = hook_fileio(self, "bytes(path)", False, True, pathlib.Path.read_bytes)
         tokenize._builtin_open = builtins.open # 20250520 torch/_dynamo/config.py patch
+        importlib.machinery.FileFinder.find_spec = detour(self, "FileFinder.find_spec", importlib.machinery.FileFinder.find_spec)
+
+        os.path.exists = detour(self, "os.path.exists", os.path.exists)  # ...
+        #os.path.dirname = detour(self, "os.path.dirname", os.path.dirname)  # ...
+        #os.path.realpath  = detour(self, "os.path.realpath", os.path.realpath) # ...
         #os.listdir = detour(self, "os.listdir", os.listdir) # 20250521 transformers patch
         pass
 

@@ -1,10 +1,10 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.3 20250528
+# zimport v0.1.4 20250531
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
 #-------------------------------------------------------------------------------
-import io, os, sys, time, shutil
+import io, os, sys, time, shutil, builtins
 import zipfile
 import pathlib
 from .util.zip import zipstaties
@@ -93,17 +93,6 @@ def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
                     print("[HOOK:::zip] cache {} [{}]".format(name, new_path), file=sys.stderr)
                     extract(zip_path, ZIPCACHED_DIR(zip_path), ent_path)
                     extract_post(''.join([ZIPCACHED_DIR(zip_path) , '/', ent_path]))
-                    '''
-                    try:
-                        with zipfile.ZipFile(zip_path) as zip_file:
-                            zip_file.extract(ent_path, ZIPCACHED_DIR(zip_path))
-                    except FileNotFoundError:
-                        print(f"[HOOK:::zip][ERROR] zip file not found: {zip_path}", file=sys.stderr)
-                    except zipfile.BadZipFile:
-                        print(f"[HOOK:::zip][ERROR] bad zip file: {zip_path}", file=sys.stderr)
-                    except Exception as e:
-                        print(f"[HOOK:::zip][ERROR] extracting {ent_path} from {zip_path}: {e}", file=sys.stderr)      
-                    '''
             args = tuple([(new_path if isString else pathlib.Path(new_path)) if idx == 0 else v for idx, v in enumerate(args)])
             return args, hook(*args, **kwargs)
         else :
@@ -120,17 +109,6 @@ def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
                         print("[HOOK:::zip] cache {} [{}]".format(name, new_path), file=sys.stderr)
                         extract(zip_path, ZIPCACHED_DIR(zip_path), ent_path)
                         extract_post(''.join([ZIPCACHED_DIR(zip_path), '/', ent_path]))
-                        '''
-                        try:
-                            with zipfile.ZipFile(zip_path) as zip_file:
-                                zip_file.extract(ent_path, ZIPCACHED_DIR(zip_path))
-                        except FileNotFoundError:
-                            print(f"[HOOK:::zip][ERROR] zip file not found: {zip_path}", file=sys.stderr)
-                        except zipfile.BadZipFile:
-                            print(f"[HOOK:::zip][ERROR] bad zip file: {zip_path}", file=sys.stderr)
-                        except Exception as e:
-                            print(f"[HOOK:::zip][ERROR] extracting {ent_path} from {zip_path}: {e}", file=sys.stderr)
-                        '''
                 args = tuple([(new_path if isString else pathlib.Path(new_path)) if idx == 0 else v for idx, v in enumerate(args)])
                 return args, hook(*args, **kwargs)
             stat = entries[neopath]
@@ -142,14 +120,27 @@ def detour(zimport, hookname : str, orgfunc) :
     ZIP_NTRY_INFO = zimport.ZIP_NTRY_INFO
     ZIP_STAT_INFO = zimport.ZIP_STAT_INFO
     ZIPCACHED_DIR = zimport.cached_dir
-
     def hook(*args, **kwargs) :
-        str_path = args[0] if type(args[0]) is str else args[0].as_posix()
-        unixpath = os.path.abspath(str_path).replace('\\', '/') # a/./b/c to a/b/c
-        if not any(tok in unixpath for tok in ZIP_IMPORTED_STRING) : return orgfunc(*args, **kwargs)
-        if (hookname == "os.listdir") :
-            print(f"os.listdir --- {unixpath}", file=sys.stderr)
-            pass
-        ret = [] #orgfunc(*args, **kwargs)
+        def path(p): f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
+        if (hookname == "FileFinder.find_spec") : # 20250531 torchvision patch
+            org_path = args[0].path # org_path = os.path.abspath(args[0].path).replace('\\', '/')
+            if is_zip_path(org_path):
+                zip_path, ent_path, new_path = zimport.path_maker(org_path)
+                if DBG : print(f"[INF:::detour] {hookname}.path [{org_path}] to [{new_path}]", file=sys.stdout)
+                args[0].path = new_path
+            ret = orgfunc(*args, **kwargs)
+            return ret
+
+        if (hookname == "os.path.exists") : # 20250531 cv2 patch
+            org_path = args[0] # org_path = os.path.abspath(args[0]).replace('\\', '/')
+            zip_path, ent_path, new_path = zimport.path_maker(org_path)
+            if ent_path.startswith('cv2/') and zip_path in ZIP_NTRY_INFO :
+                zip_list = ZIP_NTRY_INFO[zip_path]
+                if ent_path in zip_list:
+                    new_path = path(org_path)
+                    args = (new_path, )
+                    if DBG : print(f"[INF:::detour] {hookname} [{org_path}] to [{new_path}]", file=sys.stdout)
+
+        ret = orgfunc(*args, **kwargs)
         return ret
     return hook
