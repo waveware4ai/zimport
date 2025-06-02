@@ -22,7 +22,7 @@ History
 2025/05/29 v0.1.3 : support (yaml package)  
 2025/05/31 v0.1.4 : support (torchvision, cv2 package)  
 2025/06/02 v0.1.5 : add builtin functions (uninstall(), zimport_set_cache_dir(PATH), zimport_clear_cache() ...)  
-2025/06/03 v0.1.6 : support (transformers package ::: https://pypi.org/project/transformers/)  
+2025/06/03 v0.1.6 : support (transformers package; https://github.com/huggingface/transformers)  
 
 Installation (pip install)
 ------------
