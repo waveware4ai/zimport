@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.4 20250531
+# zimport v0.1.5 20250602
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -113,7 +113,10 @@ def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
                 return args, hook(*args, **kwargs)
             stat = entries[neopath]
             return args, stat
-    return funcwithstring if is_string_path else funcwithpath
+
+    hook_func = funcwithstring if is_string_path else funcwithpath
+    zimport.register_hook(name, orgfunc, hook_func)
+    return hook_func
 
 ########################################
 def detour(zimport, hookname : str, orgfunc) :
@@ -123,7 +126,7 @@ def detour(zimport, hookname : str, orgfunc) :
     def hook(*args, **kwargs) :
         def path(p): f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
         if (hookname == "FileFinder.find_spec") : # 20250531 torchvision patch
-            org_path = args[0].path # org_path = os.path.abspath(args[0].path).replace('\\', '/')
+            org_path = org_path = os.path.abspath(args[0].path).replace('\\', '/')
             if is_zip_path(org_path):
                 zip_path, ent_path, new_path = zimport.path_maker(org_path)
                 if DBG : print(f"[INF:::detour] {hookname}.path [{org_path}] to [{new_path}]", file=sys.stdout)
@@ -132,7 +135,8 @@ def detour(zimport, hookname : str, orgfunc) :
             return ret
 
         if (hookname == "os.path.exists") : # 20250531 cv2 patch
-            org_path = args[0] # org_path = os.path.abspath(args[0]).replace('\\', '/')
+            org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
+            if not 'cv2/' in org_path : return orgfunc(*args, **kwargs)
             zip_path, ent_path, new_path = zimport.path_maker(org_path)
             if ent_path.startswith('cv2/') and zip_path in ZIP_NTRY_INFO :
                 zip_list = ZIP_NTRY_INFO[zip_path]
@@ -141,6 +145,28 @@ def detour(zimport, hookname : str, orgfunc) :
                     args = (new_path, )
                     if DBG : print(f"[INF:::detour] {hookname} [{org_path}] to [{new_path}]", file=sys.stdout)
 
+        if False and (hookname == "os.listdir") : # 202506xx transformers patch, not yet ...
+            org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
+            if not 'transformers/' in org_path : return orgfunc(*args, **kwargs)
+            if DBG : print(f"[INF:::detour] {hookname} {org_path}")
+            zip_path, ent_path, new_path = zimport.path_maker(org_path)
+            if ent_path.startswith('transformers/') and zip_path in ZIP_NTRY_INFO :
+                zip_list = ZIP_NTRY_INFO[zip_path]
+                skip_pos = len(ent_path) + 1
+                list_unq = set()
+                for n in zip_list :
+                    if (n.startswith(ent_path)) :
+                        name = n[skip_pos:n.find('/', skip_pos+1)]
+                        if (0 < len(name)) :
+                            list_unq.add(name)
+                            # print(f"[INF:::detour] {hookname} [{n}] list [{name}]", file=sys.stdout)
+                if (0 < len(list_unq)) :
+                    ret = list [list_unq]
+                    if True : print(f"[INF:::detour] {hookname} [{n}] {ret}", file=sys.stdout)
+                    return ret
+
         ret = orgfunc(*args, **kwargs)
         return ret
+
+    zimport.register_hook(hookname, orgfunc, hook)
     return hook

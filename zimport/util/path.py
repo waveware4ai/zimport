@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.4 20250531
+# zimport v0.1.5 20250602
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -48,3 +48,10 @@ def find(path) :
     elif os.path.exists(__file__ + "/../../../../" + path)    : dir = os.path.abspath(__file__ + "/../../../../" + path).replace('\\', '/')
     elif os.path.exists(__file__ + "/../../../../../" + path) : dir = os.path.abspath(__file__ + "/../../../../../" + path).replace('\\', '/')
     return dir
+
+def exists(base : str, dirs : list, name : str) :
+    for d in dirs :
+        p = os.path.abspath('/'.join([base, d, name])).replace('\\', '/')
+        if os.path.exists(p) :
+            return p
+    return None

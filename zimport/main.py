@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.4 20250531
+# zimport v0.1.5 20250602
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -8,14 +8,14 @@
 # refer to https://docs.python.org/3/reference/import.html#the-meta-path
 # refer to https://peps.python.org/pep-0302/
 
-import io, os, sys, importlib, time
+import io, os, sys, importlib, time, shutil
 import ctypes
 import pathlib
 import builtins, tokenize
 
 from .main_impl import hook_fileio
 from .main_impl import detour
-from .util.path import path_exists_native, find
+from .util.path import path_exists_native, find, exists
 from .util.zip import zipstaties
 import zimport.util.zip as ZIP
 
@@ -43,31 +43,21 @@ def debug(debug=True) :
 
 CACHE_DIR_ROOT = None 
 
-def set_cache_dir(path) :
-    global CACHE_DIR_ROOT
-    CACHE_DIR_ROOT = path
-    if not path_exists_native(CACHE_DIR_ROOT) :
-        os.makedirs(CACHE_DIR_ROOT, exist_ok=True)    
-
 def auto_cache_dir() :
     global CACHE_DIR_ROOT
     if "PROJECT_HOME" in os.environ :
         FROM_STRING = "os.environ['PROJECT_HOME']"
-        os.environ["PROJECT_HOME"] = os.environ["PROJECT_HOME"].replace('\"', '')
-        if path_exists_native(os.path.dirname(os.environ["PROJECT_HOME"]) + '/' + ".cache") : # if find subdir/.cache
-            os.environ["PROJECT_HOME"] = os.path.abspath(os.path.dirname(os.environ["PROJECT_HOME"])).replace('\\', '/')
-        CACHE_DIR_ROOT = os.environ["PROJECT_HOME"] + '/' + ".cache"
-    elif find(".cache") :
-        FROM_STRING = "find('.cache')"
-        CACHE_DIR_ROOT = find(".cache")
+        os.environ["PROJECT_HOME"] = os.environ["PROJECT_HOME"].replace('\"', '') # remove '"'
+        CACHE_DIR_ROOT = exists(os.environ["PROJECT_HOME"], ['.', '..', 'lib', 'lib/site-packages'], '.cache')
+        if CACHE_DIR_ROOT is None : CACHE_DIR_ROOT = os.environ["PROJECT_HOME"] + '/' + ".cache"
     else :
         FROM_STRING = "os.path.dirname(sys.executable)"
-        CACHE_DIR_ROOT = os.path.dirname(sys.executable) + "/.cache" # os.path.dirname(sys.executable) + "/../.cache" 
-    
+        CACHE_DIR_ROOT = exists(os.path.dirname(sys.executable), ['.', '..', 'lib', 'lib/site-packages'], '.cache')
+        if CACHE_DIR_ROOT is None : CACHE_DIR_ROOT = os.path.dirname(sys.executable) + '/' + ".cache"
+
     CACHE_DIR_ROOT = CACHE_DIR_ROOT.replace('\\', '/')
+    if not path_exists_native(CACHE_DIR_ROOT) : os.makedirs(CACHE_DIR_ROOT, exist_ok=True)
     print(f"[INF] zimport cache_dir ::: [{CACHE_DIR_ROOT}] from {FROM_STRING}", file=sys.stderr)
-    if not path_exists_native(CACHE_DIR_ROOT) :
-        os.makedirs(CACHE_DIR_ROOT, exist_ok=True)
 
 def cached_dir(path) : # a/b/c.z/d to library.dir/.cache/a/b/c.z/d
     # if CACHE_DIR_ROOT is None : auto_cache_dir()
@@ -122,12 +112,13 @@ class zimport(object):
         pathlib.Path.read_text = hook_fileio(self, "read (path)", False, True, pathlib.Path.read_text)  # for sklearn
         pathlib.Path.read_bytes = hook_fileio(self, "bytes(path)", False, True, pathlib.Path.read_bytes)
         tokenize._builtin_open = builtins.open # 20250520 torch/_dynamo/config.py patch
-        importlib.machinery.FileFinder.find_spec = detour(self, "FileFinder.find_spec", importlib.machinery.FileFinder.find_spec)
+        importlib.machinery.FileFinder.find_spec = detour(self, "FileFinder.find_spec", importlib.machinery.FileFinder.find_spec) # 20250531 torchvision patch
+        os.path.exists = detour(self, "os.path.exists", os.path.exists) # 20250531 cv2 patch
+        os.listdir = detour(self, "os.listdir", os.listdir) # 202506xx transformers patch
 
-        os.path.exists = detour(self, "os.path.exists", os.path.exists)  # ...
         #os.path.dirname = detour(self, "os.path.dirname", os.path.dirname)  # ...
         #os.path.realpath  = detour(self, "os.path.realpath", os.path.realpath) # ...
-        #os.listdir = detour(self, "os.listdir", os.listdir) # 20250521 transformers patch
+
         pass
 
     def install_importer(self):
@@ -225,27 +216,16 @@ class zimport(object):
     def invalidate_caches(self) :
         invalidate_caches()
 
-########################################
+    def register_hook(self, hookname, org_func, hookfunc) :
+        return register_hook(hookname, org_func, hookfunc)
 
-
-def install() :
-    return getInstance()
-
-def getInstance() : 
-    if zimport.__instance__ is None: zimport()
-    return zimport.__instance__
-
-
-######################################## part of sys.path
+def addsyspath(path) :
+    paths = os.environ["PATH"].split(';' if os.name == "nt" else ':')
+    if not (path in paths) :
+        os.environ["PATH"] += path + (';' if os.name == "nt" else ':')
+        if False : print(f"[INF] add PATH : {path}")
 
 cacheofpath = dict()
-
-def invalidate_caches():
-    if False : print(f"[INF] invalidate_caches ...")
-    if True : sys.path_importer_cache.clear()
-    if False : importlib.invalidate_caches()   # danger code
-    cacheofpath.clear()
-
 def path_maker(ziparchive, org_path):
     if org_path in cacheofpath: return cacheofpath[org_path]  # search cache
     abs_path = os.path.abspath(org_path)
@@ -262,25 +242,129 @@ def path_maker(ziparchive, org_path):
     cacheofpath[org_path] = zip_path, ent_path, new_path  # save cache
     return zip_path, ent_path, new_path
 
-# def getsyspath():
-#     ziparchive = []
-#     zipentries = dict()
-#     for p in sys.path:
-#         if os.path.isfile(p) and (p.endswith(".z") or p.endswith(".zip")):
-#             zip = zipfile.ZipFile(p)
-#             zipentries[p.replace('\\', '/')] = zip.namelist()
-#             zip.close()
-#             ziparchive.append(p.replace('/', '\\'))
-#             ziparchive.append(p.replace('\\', '/'))
-#     return ziparchive, zipentries
+def invalidate_caches():
+    if False : print(f"[INF] invalidate_caches ...")
+    if True : sys.path_importer_cache.clear()
+    if False : importlib.invalidate_caches()   # very danger code
+    cacheofpath.clear()
 
-def addsyspath(path) :
-    paths = os.environ["PATH"].split(';' if os.name == "nt" else ':')
-    if not (path in paths) :
-        os.environ["PATH"] += path + (';' if os.name == "nt" else ':')
-        if False : print(f"[INF] add PATH : {path}")
+######################################## instance of singleton
 
-def precache_dll(dll, debug=True) : # preload pyd, dll, so
+def getInstance() :
+    if zimport.__instance__ is None: zimport()
+    return zimport.__instance__
+
+def install() :
+    return getInstance()
+
+def uninstall() :
+    #sys.path_hooks.insert(0, pathfinder.PathFinder)
+    if sys.path_hooks[0].__qualname__  != "PathFinder" : return
+    sys.path_hooks.remove(sys.path_hooks[0])
+    cls = type(zimport.__instance__)
+    delattr(cls, "_instance")
+    delattr(cls, "_init")
+    zimport.__instance__ = None
+    restore_hook()
+    sys.path_importer_cache.clear()
+    pass
+
+hookforfunc = dict()
+def register_hook(hookname, org_func, hookfunc) :
+    hookforfunc[hookname] = org_func, hookfunc
+    pass
+
+def restore_hook() :
+    for k, v in hookforfunc.items() :
+        if False : pass
+        elif k == "open" :
+            builtins.open = v[0]
+            tokenize._builtin_open = v[0]
+        elif k == "stat" :
+            os.stat = v[0]
+        elif k == "adll" :
+            os.add_dll_directory = v[0]
+        elif k == "wdll" :
+            ctypes.WinDLL = v[0]
+        elif k == "cdll" :
+            ctypes.CDLL = v[0]
+        elif k == "read (path)" :
+            pathlib.Path.read_text = v[0]
+        elif k == "bytes(path)" :
+            pathlib.Path.read_bytes = v[0]
+        elif k == "FileFinder.find_spec" :
+            importlib.machinery.FileFinder.find_spec = v[0]
+        elif k == "os.path.exists" :
+            os.path.exists = v[0]
+        elif k == "os.listdir" :
+            os.listdir = v[0]
+    hookforfunc.clear()
+    pass
+
+
+######################################## cache directory
+
+def zimport_set_cache_dir(path) :
+    global CACHE_DIR_ROOT
+    if not path_exists_native(path) :
+        os.makedirs(path, exist_ok=True)
+    CACHE_DIR_ROOT = path
+    pass
+
+def zimport_clear_cache() :
+    global CACHE_DIR_ROOT
+    if not path_exists_native(CACHE_DIR_ROOT) : return
+    for f in os.listdir(CACHE_DIR_ROOT):
+        try:
+            path = os.path.join(CACHE_DIR_ROOT, f)
+            shutil.rmtree(path)
+        except Exception :
+            pass
+
+
+######################################## manual extract entry to cache directory
+
+def zimport_extract_to_cache(fle, debug=True) : # preload
+    zim = getInstance()
+    fle = fle.replace('\\','/')
+    pth = None
+    if zim is None : print("[ERR] try zimport.install() ...", file=sys.stderr); return None
+    def copy(p) : f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
+    for z in zim.ZIP_NTRY_INFO:
+        lst = zim.ZIP_NTRY_INFO[z]
+        lst = [z + "/" + p for p in lst if p.endswith(fle)]
+        for fle in lst:
+            pth = copy(fle)
+            if debug :print("[COPY::file] {}".format(pth), file=sys.stderr)
+        if 0 < len(lst) :
+            break
+    if not pth :
+        print(f"[COPY::file] cannot found file {fle}", file=sys.stderr)
+    return pth
+
+######################################## deprecated function
+
+def precache_directory_deprecated(dir, debug=True) : # preload
+    zim = getInstance()
+    dir = dir.replace('\\','/')
+    pth = None
+    if zim is None : print("[ERR] try zimport.install() ...", file=sys.stderr); return None
+    def copy(p) : f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
+    for z in zim.ZIP_NTRY_INFO:
+        lst = zim.ZIP_NTRY_INFO[z]
+        lst = [z + "/" + p for p in lst if p.startswith(dir)]
+        for fle in lst:
+            if fle.endswith('/') : continue # is directory
+            out = copy(fle)
+            if pth is None : pth = os.path.dirname(out)
+            if debug :print("[COPY:::dir] {}".format(out), file=sys.stderr)
+        if 0 < len(lst) :
+            break
+    if not pth :
+        print(f"[COPY:::dir] cannot found directory {dir}", file=sys.stderr)
+    return pth
+
+def precache_dll_deprecated(dll, debug=True) : # preload pyd, dll, so
     zim = getInstance()
     fle = dll.replace('\\','/')
     pth = None
@@ -300,40 +384,5 @@ def precache_dll(dll, debug=True) : # preload pyd, dll, so
         print(f"[COPY:::dir] cannot found dll {dll}", file=sys.stderr)
     return pth
 
-def precache_file(fle, debug=True) : # preload
-    zim = getInstance()
-    fle = fle.replace('\\','/')
-    pth = None
-    if zim is None : print("[ERR] try zimport.install() ...", file=sys.stderr); return None
-    def copy(p) : f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
-    for z in zim.ZIP_NTRY_INFO:
-        lst = zim.ZIP_NTRY_INFO[z]
-        lst = [z + "/" + p for p in lst if p.endswith(fle)]
-        for fle in lst:
-            pth = copy(fle)
-            if debug :print("[COPY::file] {}".format(pth), file=sys.stderr)
-        if 0 < len(lst) :
-            break
-    if not pth :
-        print(f"[COPY::file] cannot found file {fle}", file=sys.stderr)
-    return pth
 
-def precache_directory(dir, debug=True) : # preload
-    zim = getInstance()
-    dir = dir.replace('\\','/')
-    pth = None
-    if zim is None : print("[ERR] try zimport.install() ...", file=sys.stderr); return None
-    def copy(p) : f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
-    for z in zim.ZIP_NTRY_INFO:
-        lst = zim.ZIP_NTRY_INFO[z]
-        lst = [z + "/" + p for p in lst if p.startswith(dir)]
-        for fle in lst:
-            if fle.endswith('/') : continue # is directory
-            out = copy(fle)
-            if pth is None : pth = os.path.dirname(out)
-            if debug :print("[COPY:::dir] {}".format(out), file=sys.stderr)
-        if 0 < len(lst) :
-            break
-    if not pth :
-        print(f"[COPY:::dir] cannot found directory {dir}", file=sys.stderr)
-    return pth
+
