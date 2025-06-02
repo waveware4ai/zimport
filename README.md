@@ -19,8 +19,8 @@ History
 2025/05/21 v0.1.0 : initial released  
 2025/05/26 v0.1.1 : support macosx, some minor bug fix  
 2025/05/28 v0.1.2 : some minor bug fix  
-2025/05/29 v0.1.3 : support (yaml package)  
-2025/05/31 v0.1.4 : support (torchvision, cv2 package)  
+2025/05/29 v0.1.3 : support (yaml, another packages)  
+2025/05/31 v0.1.4 : support (torch, torchvision package; https://pytorch.org/)  
 2025/06/02 v0.1.5 : add builtin functions (uninstall(), zimport_set_cache_dir(PATH), zimport_clear_cache() ...)  
 2025/06/03 v0.1.6 : support (transformers package; https://github.com/huggingface/transformers)  
 
