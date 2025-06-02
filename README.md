@@ -21,6 +21,7 @@ History
 2025/05/28 v0.1.2 : some minor bug fix  
 2025/05/29 v0.1.3 : bug fix (yaml package)  
 2025/05/31 v0.1.4 : bug fix (torchvision, cv2 package)
+2025/06/02 v0.1.5 : add builtin functions (uninstall(), zimport_set_cache_dir(PATH), zimport_clear_cache() ...)  
 
 Installation (pip install)
 ------------
@@ -191,12 +192,13 @@ NVIDIA GeForce RTX 2080
 Usage
 ------------
 ```pyton
-zimport.install()                # Since it is installed at the same time as import, there is no need to use it in general cases.
-zimport.debug(True/False)        # Used to perform debugging. The default is False.
-zimport.invalidate_caches()      # Used to clear cache information. Mainly needed for reloading when modifying .py.
-zimport.precache_dll(PATH)       # This pre-caches the dll. Normally you won't need to do this.
-zimport.precache_file(PATH)      # This pre-caches the file. Normally you won't need to do this.
-zimport.precache_directory(PATH) # This pre-caches the directory. Normally you won't need to do this.
+zimport.install()                      # Since it is installed at the same time as import, there is no need to use it in general cases.
+zimport.uninstall()                    # Used to uninstall zimport, and all variables will revert to before install.
+zimport.debug(True/False)              # Used to perform debugging. The default is False.
+zimport.zimport_set_cache_dir(PATH)    # You can customize the cache dir of zimport. By default, the cache dir is set automatically,  
+                                       # and the [.cache] directory is searched in the order of ['.', '..', 'lib', 'lib/site-packages'] based on the python executable binary.
+zimport.zimport_clear_cache()          # Deletes all files in the specified cache dir.
+zimport.zimport_extract_to_cache(PATH) # This pre-caches the file. Normally you won't need to do this.
 ```
 
 Save your Storage
