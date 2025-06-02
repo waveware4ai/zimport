@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.5 20250602
+# zimport vv0.1.6 20250603
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -139,7 +139,7 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
             except Exception as e1:
                 try:
                     if False : traceback.print_exc()
-                    if DBG : print(f"[INF:::exec_module@pathfinder] failed [{e1}] to [{mod_path}] ...", file=sys.stderr)
+                    if DBG : print(f"[INF:::exec_module@pathfinder] failed [{e1}] with [{mod_path}] ...", file=sys.stderr)
                     pass
                 except Exception as e2:
                     #code, ispackage, mod_path = pathfinder_impl.get_module_code(self, module.__name__)

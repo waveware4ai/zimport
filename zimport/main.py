@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.5 20250602
+# zimport vv0.1.6 20250603
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -114,7 +114,11 @@ class zimport(object):
         tokenize._builtin_open = builtins.open # 20250520 torch/_dynamo/config.py patch
         importlib.machinery.FileFinder.find_spec = detour(self, "FileFinder.find_spec", importlib.machinery.FileFinder.find_spec) # 20250531 torchvision patch
         os.path.exists = detour(self, "os.path.exists", os.path.exists) # 20250531 cv2 patch
+
         os.listdir = detour(self, "os.listdir", os.listdir) # 202506xx transformers patch
+        os.path.isdir = detour(self, "os.path.isdir", os.path.isdir) # 202506xx transformers patch
+        os.path.isfile = detour(self, "os.path.isfile", os.path.isfile) # 202506xx transformers patch
+        os.path.join = detour(self, "os.path.join", os.path.join) # 202506xx transformers patch
 
         #os.path.dirname = detour(self, "os.path.dirname", os.path.dirname)  # ...
         #os.path.realpath  = detour(self, "os.path.realpath", os.path.realpath) # ...
@@ -258,7 +262,7 @@ def install() :
     return getInstance()
 
 def uninstall() :
-    #sys.path_hooks.insert(0, pathfinder.PathFinder)
+    if zimport.__instance__ is None : return
     if sys.path_hooks[0].__qualname__  != "PathFinder" : return
     sys.path_hooks.remove(sys.path_hooks[0])
     cls = type(zimport.__instance__)
@@ -298,6 +302,13 @@ def restore_hook() :
             os.path.exists = v[0]
         elif k == "os.listdir" :
             os.listdir = v[0]
+        elif k == "os.path.join" :
+            os.path.join = v[0]
+        elif k == "os.path.isdir" :
+            os.path.isdir = v[0]
+        elif k == "os.path.isfile" :
+            os.path.isfile = v[0]
+
     hookforfunc.clear()
     pass
 
