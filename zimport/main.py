@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.7 20250606
+# zimport v0.1.8 202506xx
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -118,7 +118,8 @@ class zimport(object):
         detour(self, "os.listdir") # 20250602 transformers patch
         detour(self, "os.path.isdir") # 20250602 transformers patch
         detour(self, "os.path.isfile") # 20250602 transformers patch
-        detour(self, "os.path.join") # 20250602 transformers patch
+        detour(self, "os.path.dirname") # if this turn-on, err occur in transformers, Could not import module 'CLIPTokenizer'.
+        detour(self, "os.path.join") # 20250606 librosa patch
         pass
 
     def install_importer(self):
@@ -167,6 +168,12 @@ class zimport(object):
             self.ZIP_NTRY_TREE[zip] = tree
             self.addsystempath(zip, ntry.keys())
         except Exception as e :
+            # ntry, stat, tree = ZIP.zipinfo(zip)
+            # self.ZIP_REG_NAMES.add(zip)
+            # self.ZIP_NTRY_INFO[zip] = ntry
+            # self.ZIP_STAT_INFO[zip] = stat
+            # self.ZIP_NTRY_TREE[zip] = tree
+            # self.addsystempath(zip, ntry.keys())
             print(f"[ERR] addarchive {zip} ::: {e}", file = sys.stderr)
 
     def fixarchive(self, zip) :
@@ -201,7 +208,7 @@ class zimport(object):
             unq.add(os.path.dirname(pth))
         if 0 < len(unq):
             for dir in unq:
-                if os.name == "nt" : os.add_dll_directory(dir)
+                #if os.name == "nt" : os.add_dll_directory(dir) # no needs ??? 20250606
                 addsyspath(os.path.abspath(dir) if os.name == "nt" else dir)
                 if DBG : print("[INF] add PATH [" + dir + "]")
 

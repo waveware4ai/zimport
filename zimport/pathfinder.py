@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.7 20250606
+# zimport v0.1.8 202506xx
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -136,14 +136,10 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
             spec._cached = mod_path
             try:
                 exec(code, module.__dict__) # mainly exec works here ...
-            except Exception as e1:
-                try:
-                    if False : traceback.print_exc()
-                    if DBG : print(f"[INF:::exec_module@pathfinder] failed [{e1}] with [{mod_path}] ...", file=sys.stderr)
-                    pass
-                except Exception as e2:
-                    #code, ispackage, mod_path = pathfinder_impl.get_module_code(self, module.__name__)
-                    print(f"[ERR:::exec_module@pathfinder] err [{e2}] to [{mod_path}] ...", file=sys.stderr)
+            except Exception as e:
+                if False: traceback.print_exc()
+                if DBG: print(f"[INF:::exec_module@pathfinder] failed [{e}] with [{mod_path}] ...", file=sys.stderr)
+                if ('matplotlib/' in mod_path) : raise ImportError("[ERR] failed import ...")
 
     def load_module(self, fullname):
         return BOOTSTRAP.load_module_shim(self, fullname)

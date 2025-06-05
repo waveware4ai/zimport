@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.7 20250606
+# zimport v0.1.8 202506xx
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -126,9 +126,8 @@ def detour(zimport, hookname : str) :
     ZIP_NTRY_TREE = zimport.ZIP_NTRY_TREE
     ZIPCACHED_DIR = zimport.cached_dir
 
-    #m, f = getmodulefunction(hookname) # name : a.b.c -> a.b and c
     mod, clz, fun = module.decompose(hookname)
-    orgfunc = module.get(mod, clz, fun) #getattr(m, f)
+    orgfunc = module.get(mod, clz, fun)
 
     def hook(*args, **kwargs) :
         def path(p): f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
@@ -142,25 +141,26 @@ def detour(zimport, hookname : str) :
             ret = orgfunc(*args, **kwargs)
             return ret
 
-        if (hookname == "os.path.exists") : # 20250531 cv2 patch
+        if (hookname == "os.path.exists") :
             org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
             if not is_zip_path(org_path): return orgfunc(*args, **kwargs)
-            if not 'cv2/' in org_path : return orgfunc(*args, **kwargs)
             zip_path, ent_path, new_path = zimport.path_maker(org_path)
-            if ent_path.startswith('cv2/') and zip_path in ZIP_NTRY_INFO :
+            if (ent_path.startswith('cv2/') or ent_path.startswith('librosa/')) and zip_path in ZIP_NTRY_INFO : # 20250531 cv2 patch, 20250606 librosa patch
+            #if zip_path in ZIP_NTRY_INFO:
                 zip_list = ZIP_NTRY_INFO[zip_path]
                 if ent_path in zip_list:
                     new_path = path(org_path)
                     args = (new_path, )
                     if DBG : print(f"[INF:::detour] {hookname} [{org_path}] to [{new_path}]", file=sys.stdout)
+            ret = orgfunc(*args, **kwargs)
+            return ret
 
         if (hookname == "os.listdir") : # 20250602 transformers patch
             org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
             if not is_zip_path(org_path): return orgfunc(*args, **kwargs)
-            if not 'transformers/' in org_path : return orgfunc(*args, **kwargs)
             if DBG : print(f"[INF:::detour] {hookname} {org_path}")
             zip_path, ent_path, new_path = zimport.path_maker(org_path)
-            if ent_path.startswith('transformers/') and zip_path in ZIP_NTRY_TREE :
+            if zip_path in ZIP_NTRY_INFO:
                 zip_tree = ZIP_NTRY_TREE[zip_path]
                 t = zip_tree.find(ent_path)
                 if t is not None :
@@ -168,31 +168,12 @@ def detour(zimport, hookname : str) :
                     ret.sort()
                     if DBG : print(f"[INF:::detour] {hookname} [{ent_path}] {ret}", file=sys.stderr)
                     return ret
-            '''
-            if ent_path.startswith('transformers/') and zip_path in ZIP_NTRY_INFO :
-                zip_list = ZIP_NTRY_INFO[zip_path]
-                skip_pos = len(ent_path) + 1
-                list_unq = set()
-                for n in zip_list :
-                    if (n.startswith(ent_path + '/')) : # last '/' is very important, ex) ent_path == a/b/c, n == a/b/c/d
-                        temp = n.find('/', skip_pos+1) # temp pos
-                        name = n[skip_pos:len(n) if temp < 0 else temp] # pure sub dir or file name
-                        name = name.replace('/', '')
-                        if (1 < len(name)) : # len(name) == 1 ::: ignore '/'
-                            list_unq.add(name)
-                if (0 < len(list_unq)) :
-                    ret = list(list_unq)
-                    ret.sort()
-                    if DBG : print(f"[INF:::detour] {hookname} [{ent_path}] {ret}", file=sys.stderr)
-                    return ret
-            '''
 
         if (hookname == "os.path.isdir") : # 20250602 transformers patch
             org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
             if not is_zip_path(org_path) : return orgfunc(*args, **kwargs)
-            if not 'transformers/' in org_path : return orgfunc(*args, **kwargs)
             zip_path, ent_path, new_path = zimport.path_maker(org_path)
-            if ent_path.startswith('transformers/') and zip_path in ZIP_NTRY_INFO :
+            if zip_path in ZIP_NTRY_INFO:
                 zip_list = ZIP_NTRY_INFO[zip_path]
                 isfolder = True if (''.join([ent_path, '/'])) in zip_list else False
                 ret = True if isfolder else False
@@ -203,9 +184,8 @@ def detour(zimport, hookname : str) :
         if (hookname == "os.path.isfile") : # 20250602 transformers patch
             org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
             if not is_zip_path(org_path): return orgfunc(*args, **kwargs)
-            if not 'transformers/' in org_path : return orgfunc(*args, **kwargs)
             zip_path, ent_path, new_path = zimport.path_maker(org_path)
-            if ent_path.startswith('transformers/') and zip_path in ZIP_NTRY_INFO :
+            if zip_path in ZIP_NTRY_INFO:
                 zip_list = ZIP_NTRY_INFO[zip_path]
                 isfolder = True if (''.join([ent_path, '/'])) in zip_list else False
                 ret = False if isfolder else True
@@ -213,10 +193,30 @@ def detour(zimport, hookname : str) :
                 return ret
             pass
 
-        if (hookname == "os.path.join") :
+        if (hookname == "os.path.dirname") : # 20250606 librosa patch
+            org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
+            if not is_zip_path(org_path) : return orgfunc(*args, **kwargs)
+            if 'transformers/' in org_path : return orgfunc(*args, **kwargs) # 20250606 transformers patch
+            zip_path, ent_path, new_path = zimport.path_maker(org_path)
+            if zip_path in ZIP_NTRY_INFO:
+                zip_list = ZIP_NTRY_INFO[zip_path]
+                #args = (new_path,)
+                args = tuple([new_path if idx == 0 else v for idx, v in enumerate(args)])
+                if DBG : print(f"[INF:::detour] {hookname} {org_path} {new_path}", file=sys.stderr)
+                ret = orgfunc(*args, **kwargs)
+                return ret
+            pass
+
+        if (hookname == "os.path.join") : # 20250606 librosa patch
             org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
             if not is_zip_path(org_path): return orgfunc(*args, **kwargs)
-            if False: print(f"[INF:::detour] {hookname} {org_path} ::: {args[1]}", file=sys.stderr)
+            zip_path, ent_path, new_path = zimport.path_maker(org_path)
+            if zip_path in ZIP_NTRY_INFO:
+                zip_list = ZIP_NTRY_INFO[zip_path]
+                args = tuple([new_path if idx == 0 else v for idx, v in enumerate(args)])
+                if DBG : print(f"[INF:::detour] {hookname} {org_path} {new_path}", file=sys.stderr)
+                ret = orgfunc(*args, **kwargs)
+                return ret
             pass
 
         ret = orgfunc(*args, **kwargs)
