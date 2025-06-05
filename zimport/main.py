@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.8 202506xx
+# zimport v0.1.8 20250607
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -118,7 +118,7 @@ class zimport(object):
         detour(self, "os.listdir") # 20250602 transformers patch
         detour(self, "os.path.isdir") # 20250602 transformers patch
         detour(self, "os.path.isfile") # 20250602 transformers patch
-        detour(self, "os.path.dirname") # if this turn-on, err occur in transformers, Could not import module 'CLIPTokenizer'.
+        detour(self, "os.path.dirname") # 20250606 transformers patch
         detour(self, "os.path.join") # 20250606 librosa patch
         pass
 

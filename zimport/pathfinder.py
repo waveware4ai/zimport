@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.8 202506xx
+# zimport v0.1.8 20250607
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -141,7 +141,7 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
             except Exception as e:
                 if False: traceback.print_exc()
                 if DBG: print(f"[INF:::exec_module@pathfinder] failed [{e}] with [{mod_path}] ...", file=sys.stderr)
-                if ('matplotlib/' in mod_path) : raise ImportError("[ERR] failed import ...")
+                if ('matplotlib/' in mod_path) : raise ImportError("[ERR] failed import ...") # 20250606 matplotlib patch
 
     def load_module(self, fullname):
         return BOOTSTRAP.load_module_shim(self, fullname)
