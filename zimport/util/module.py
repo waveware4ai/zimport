@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.8 20250607
+# zimport v0.1.9 202506xx
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -53,24 +53,26 @@ def getclz(head : str, tail : str) -> object :
 ########################################
 
 def decompose(funcpath : str) -> tuple[object, object, object] : # dotted path : a.b.c -> a.b and c
+    if (funcpath is None) : return (None, None, None)
     sep = funcpath.split(".")
     mod = None
     cls = None
     fun = None
-    for i in range(len(sep)-1) :
+    for i in range(len(sep)) :
         try :
             head = '.'.join(sep[:i+1])
-            tail = sep[i+1]
+            tail = sep[i+1] if i+1 < len(sep) else ''
             cur_is_m = ismod(head)
             if cur_is_m : mod = getmod(head)
             cur_is_c = isclz(head, tail)
             if cur_is_c : cls = getclz(head, tail)
             cur_is_f = isfun(cls if cls is not None else mod, tail)
             if cur_is_f : fun = tail
-
-            if DBG :print(f"[{i}] [{head}/{tail}] m[{cur_is_m}] c[{cur_is_c}] f[{cur_is_f}]")
+            if False :print(f"[{i}] [{head}/{tail}] m[{cur_is_m}] c[{cur_is_c}] f[{cur_is_f}]")
         except Exception as e:
             pass
+
+    if DBG :print(f"[INF] [{funcpath}] == m[{'' if mod is None else mod.__name__}] c[{'' if cls is None else cls.__name__}] f[{'' if fun is None else fun}]", file=sys.stdout)
     return (mod, cls, fun)
 
 def set(mod : object, cls : object, fun : str, val : object) -> None :
@@ -87,13 +89,28 @@ def get(mod : object, cls : object, fun : str) -> object :
 
 if __name__ == '__main__':
     DBG = True
+    import zimport
+    print('----------')
+    mod, cls, fun = decompose("pathlib")
+    mod, cls, fun = decompose("pathlib.Path")
     mod, cls, fun = decompose("pathlib.Path.read_text")
-    print('----------')
     mod, cls, fun = decompose("pathlib.Path.read_bytes")
-    print('----------')
     mod, cls, fun = decompose("importlib.machinery.FileFinder.find_spec")
-    print('----------')
     mod, cls, fun = decompose("builtins.open")
+    mod, cls, fun = decompose("zimport.util.zip.is_ziparchive_deep")
+    mod, cls, fun = decompose("zimport.util.zip.ZipReader.open_resource")
     print('----------')
     pass
 
+'''
+----------
+[INF] [pathlib] == m[pathlib] c[] f[]
+[INF] [pathlib.Path] == m[pathlib] c[Path] f[]
+[INF] [pathlib.Path.read_text] == m[pathlib] c[Path] f[read_text]
+[INF] [pathlib.Path.read_bytes] == m[pathlib] c[Path] f[read_bytes]
+[INF] [importlib.machinery.FileFinder.find_spec] == m[importlib.machinery] c[FileFinder] f[find_spec]
+[INF] [builtins.open] == m[builtins] c[] f[open]
+[INF] [zimport.util.zip.is_ziparchive_deep] == m[zimport.util.zip] c[] f[is_ziparchive_deep]
+[INF] [zimport.util.zip.ZipReader.open_resource] == m[zimport.util.zip] c[ZipReader] f[open_resource]
+----------
+'''

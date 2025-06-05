@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.8 20250607
+# zimport v0.1.9 202506xx
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -74,6 +74,7 @@ def open(fle) :
 
 def zipinfo(fle : str) -> tuple:
     try :
+        fle = os.path.abspath(fle).replace('\\', '/') # all path must use separator '/'
         stf = _bootstrap_external._path_stat(fle) # get file stat struct
         std = _bootstrap_external._path_stat(os.path.dirname(fle)) # get directory stat struct
     except :
@@ -84,7 +85,7 @@ def zipinfo(fle : str) -> tuple:
     tree = Tree()
 
     try:
-        fle = fle.replace('\\', '/') # all path must use separator '/'
+        #fle = fle.replace('\\', '/') # all path must use separator '/'
         zio = open(fle) if USE_CACHED_FILE else _io.open_code(fle)
 
         try:

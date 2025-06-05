@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.8 20250607
+# zimport v0.1.9 202506xx
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -15,6 +15,7 @@ import builtins, tokenize
 
 from .main_impl import hook_fileio
 from .main_impl import detour
+from .main_impl import extract
 from .util.path import path_exists_native, find, exists
 import zimport.util.zip as ZIP
 
@@ -116,9 +117,9 @@ class zimport(object):
         detour(self, "importlib.machinery.FileFinder.find_spec") # 20250531 torchvision patch
         detour(self, "os.path.exists") # 20250531 cv2 patch
         detour(self, "os.listdir") # 20250602 transformers patch
-        detour(self, "os.path.isdir") # 20250602 transformers patch
-        detour(self, "os.path.isfile") # 20250602 transformers patch
-        detour(self, "os.path.dirname") # 20250606 transformers patch
+        # detour(self, "os.path.isdir") # 20250607 no needs this code ???
+        detour(self, "os.path.isfile") # 20250606 transformers requires this patch !!!
+        # detour(self, "os.path.dirname") # 20250607 no needs this code ???
         detour(self, "os.path.join") # 20250606 librosa patch
         pass
 
@@ -246,6 +247,18 @@ def path_maker(ziparchive, org_path):
     cacheofpath[org_path] = zip_path, ent_path, new_path  # save cache
     return zip_path, ent_path, new_path
 
+def path_maker_static(zip_file, org_file):
+    abs_path = os.path.abspath(org_file)
+    unixpath = abs_path.replace('\\', '/')
+    zip_path = ''
+    ent_path = ''
+    if unixpath.startswith(zip_file):  # a.zip/a/b/c.x startswith a.zip
+        zip_path = zip_file
+        ent_path = unixpath.replace(''.join([zip_file, '/']), '')  # ent_path = unixpath.replace(p + '/', '')
+    new_path = '/'.join([cached_dir(zip_path), ent_path])  # new_path = cachedir(zip_path) + '/' + ent_path
+    new_path = os.path.abspath(new_path).replace('\\', '/')
+    return zip_path, ent_path, new_path
+
 def invalidate_caches():
     if False : print(f"[INF] invalidate_caches ...")
     if True : sys.path_importer_cache.clear()
@@ -308,22 +321,21 @@ def zimport_clear_cache() :
 
 ######################################## manual extract entry to cache directory
 
-def zimport_extract_to_cache(fle, debug=True) : # preload
-    zim = getInstance()
-    fle = fle.replace('\\','/')
+def zimport_extract_to_cache(zip, dir, debug=True) : # preload
+    zip = os.path.abspath(zip).replace('\\','/')
+    dir = dir.replace('\\','/')
     pth = None
-    if zim is None : print("[ERR] try zimport.install() ...", file=sys.stderr); return None
-    def copy(p) : f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
-    for z in zim.ZIP_NTRY_INFO:
-        lst = zim.ZIP_NTRY_INFO[z]
-        lst = [z + "/" + p for p in lst if p.endswith(fle)]
-        for fle in lst:
-            pth = copy(fle)
-            if debug :print("[COPY::file] {}".format(pth), file=sys.stderr)
-        if 0 < len(lst) :
-            break
-    if not pth :
-        print(f"[COPY::file] cannot found file {fle}", file=sys.stderr)
+    ntry, stat, tree = ZIP.zipinfo(zip)
+    lst = ntry
+    lst = [zip + "/" + p for p in lst if p.startswith(dir)]
+    for f in lst:
+        if f.endswith('/') : continue # is directory
+        zip_path, ent_path, new_path = path_maker_static(zip, f)
+        extract(zip_path, cached_dir(zip_path), ent_path)
+        if pth is None :
+            pth = new_path if len(lst) == 1 else os.path.dirname(new_path)
+        if debug :print("[INF::extract] {}".format(new_path), file=sys.stderr)
+    if not pth : print(f"[ERR::extract] cannot found entry [{dir}]", file=sys.stderr)
     return pth
 
 ######################################## deprecated function
