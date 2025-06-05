@@ -31,19 +31,19 @@ Support & Tested Package
 The following major packages have been tested:  
 |package name|test environment|zimport version|support status (Ｏ, △, Ⅹ)|
 |:---:|:---:|:---:|:---:|
-|cv2|p3.11, p3.12 (win)|v0.1.5|Ｏ|
-|librosa|p3.11, p3.12 (win)|v0.1.8|Ｏ|
-|matplotlib|p3.11, p3.12 (win)|v0.1.8|Ｏ|
-|numpy|p3.11, p3.12 (win, linux)|v0.1.1|Ｏ|
-|onnx|p3.11, p3.12 (win)|v0.1.6|Ｏ|
-|pandas|p3.11, p3.12 (win)|v0.1.0|Ｏ|
-|psutil|p3.11, p3.12 (win, linux)|v0.1.2|Ｏ|
-|pyworld|p3.11, p3.12 (win)|v0.1.1|Ｏ|
-|PyQt5|p3.11, p3.12 (win)|v0.1.8|△ (warning about PyQt5.pk)|
-|scikitrun|p3.11, p3.12 (win)|v0.1.0|Ｏ|
-|scipy|p3.11, p3.12 (win)|v0.1.0|Ｏ|
-|torch, torchvision|p3.11, p3.12 (win, linux)|v0.1.1|Ｏ|
-|transformers|p3.11, p3.12 (win)|v0.1.6|Ｏ|
+|cv2|p3.10,11,12 (win)|v0.1.5|Ｏ|
+|librosa|p3.10,11,12 (win)|v0.1.8|Ｏ|
+|matplotlib|p3.10,11,12 (win)|v0.1.8|Ｏ|
+|numpy|p3.10,11,12 (win, linux)|v0.1.1|Ｏ|
+|onnx|p3.10,11,12 (win)|v0.1.6|Ｏ|
+|pandas|p3.10,11,12 (win)|v0.1.0|Ｏ|
+|psutil|p3.10,11,12 (win, linux)|v0.1.2|Ｏ|
+|pyworld|p3.10,11,12 (win)|v0.1.1|Ｏ|
+|PyQt5|p3.10,11,12 (win)|v0.1.8|△ (warning about PyQt5.pk)|
+|scikitrun|p3.10,11,12 (win)|v0.1.0|Ｏ|
+|scipy|p3.10,11,12 (win)|v0.1.0|Ｏ|
+|torch, torchvision|p3.10,11,12 (win, linux)|v0.1.1|Ｏ|
+|transformers|p3.10,11,12 (win)|v0.1.6|Ｏ|
 
 If you encounter any errors while using it, please be sure to provide feedback.  
 
