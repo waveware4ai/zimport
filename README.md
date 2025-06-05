@@ -41,7 +41,7 @@ The following major packages have been tested:
 |pyworld|p3.11, p3.12 (win)|v0.1.1|Ｏ|
 |scikitrun|p3.11, p3.12 (win)|v0.1.0|Ｏ|
 |scipy|p3.11, p3.12 (win)|v0.1.0|Ｏ|
-|torch|p3.11, p3.12 (win, linux)|v0.1.1|Ｏ|
+|torch, torchvision|p3.11, p3.12 (win, linux)|v0.1.1|Ｏ|
 |transformers|p3.11, p3.12 (win)|v0.1.6|Ｏ|
 
 If you encounter any errors while using it, please be sure to provide feedback.  
