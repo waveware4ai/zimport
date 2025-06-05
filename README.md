@@ -44,7 +44,7 @@ The following major packages have been tested:
 |PyQt5|p3.10,11,12 (win)|v0.1.8|△ (warning about PyQt5.pk)|
 |scikitrun|p3.10,11,12 (win)|v0.1.0|Ｏ|
 |scipy|p3.10,11,12 (win)|v0.1.0|Ｏ|
-|torch, torchvision|p3.10,11,12 (win, linux)|v0.1.1|Ｏ|
+|torch, torchvision, torchaudio|p3.10,11,12 (win, linux)|v0.1.1|Ｏ|
 |transformers|p3.10,11,12 (win)|v0.1.6|Ｏ|
 |yaml|p3.10,11,12 (win)|v0.1.3|Ｏ|
 
