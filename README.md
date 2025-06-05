@@ -42,6 +42,7 @@ The following major packages have been tested:
 |scipy|windows, p3.11, p3.12|v0.1.0|Ｏ|
 |torch|windows, linux, p3.11, p3.12|v0.1.4|Ｏ|
 |transformers|windows, p3.11, p3.12|v0.1.6|Ｏ|
+  
 If you encounter any errors while using it, please be sure to provide feedback.  
 
 Installation (pip install)
