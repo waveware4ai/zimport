@@ -34,15 +34,16 @@ The following major packages have been tested:
 |cv2|windows, p3.11, p3.12|v0.1.5|Ｏ|
 |librosa|windows, p3.11, p3.12|v0.1.8|Ｏ|
 |matplotlib|windows, p3.11, p3.12|v0.1.8|Ｏ|
-|numpy|windows, linux, p3.11, p3.12|v0.1.1|Ｏ|
+|numpy|windows, p3.11, p3.12|v0.1.1|Ｏ|
+|onnx|windows, p3.11, p3.12|v0.1.2|Ｏ|
 |pandas|windows, p3.11, p3.12|v0.1.0|Ｏ|
-|psutil|windows, linux, p3.11, p3.12|v0.1.2|Ｏ|
+|psutil|windows, p3.11, p3.12|v0.1.2|Ｏ|
 |pyworld|windows, p3.11, p3.12|v0.1.1|Ｏ|
 |scikitrun|windows, p3.11, p3.12|v0.1.0|Ｏ|
 |scipy|windows, p3.11, p3.12|v0.1.0|Ｏ|
-|torch|windows, linux, p3.11, p3.12|v0.1.4|Ｏ|
+|torch|windows, p3.11, p3.12|v0.1.1|Ｏ|
 |transformers|windows, p3.11, p3.12|v0.1.6|Ｏ|
-  
+
 If you encounter any errors while using it, please be sure to provide feedback.  
 
 Installation (pip install)
