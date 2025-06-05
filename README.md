@@ -29,7 +29,7 @@ History
 Support & Tested Package
 ------------
 The following major packages have been tested:  
-|Package name|Test environment|zimport version|Support status (Ｏ, △, Ⅹ)|
+|package name|test environment|zimport version|support status (Ｏ, △, Ⅹ)|
 |:---:|:---:|:---:|:---:|
 |cv2|p3.11, p3.12 (win)|v0.1.5|Ｏ|
 |librosa|p3.11, p3.12 (win)|v0.1.8|Ｏ|
