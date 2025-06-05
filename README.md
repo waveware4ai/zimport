@@ -30,7 +30,7 @@ History
 Support & Tested Package
 ------------
 The following major packages have been tested:  
-|package name <br> (with dependency)|test environment|zimport implemented <br> version|support status <br> (Ｏ, △, Ⅹ)|
+|package name <br> (with dependency)|test environment|zimport <br> implemented version|support status <br> (Ｏ, △, Ⅹ)|
 |:---:|:---:|:---:|:---:|
 |cv2|p3.10,11,12 (win)|v0.1.5|Ｏ|
 |diffusers|p3.10,11,12 (win)|v0.1.?|Ⅹ|
