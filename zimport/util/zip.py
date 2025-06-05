@@ -1,10 +1,11 @@
 #-------------------------------------------------------------------------------
-# zimport vv0.1.6 20250603
+# zimport v0.1.7 20250606
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
 #-------------------------------------------------------------------------------
 import os, sys, time, timeit
+if not os.path.dirname(__file__) in sys.path : sys.path.append(os.path.dirname(__file__))
 import io, _io
 import zlib, zipfile
 import typing # typing added in version 3.5, https://docs.python.org/3/library/typing.html
@@ -13,12 +14,14 @@ from importlib import abc
 from importlib import _bootstrap
 from importlib import _bootstrap_external
 
+from tree import Tree
+
 class ZipException(ImportError):
     def __init__(self, *args, **kwargs):
         if False : print(f"[EXP] {args[0]}:::{kwargs}", file=sys.stderr)
         pass
 
-class ZipReader(abc.TraversableResources):
+class ZipReader(abc.TraversableResources): # abc.Traversable, abc.TraversableResources
     def __init__(self, loader, module):
         _, _, name = module.rpartition('.')
         self.prefix = loader.virt.replace('\\', '/') + name + '/'
@@ -58,42 +61,31 @@ def is_ziparchive_deep(p) -> bool :
 
 ########################################
 
-USEFUCKFILE = False
-FUCKINGFILE = dict()
-
+USE_CACHED_FILE = False
+MAP_CACHED_FILE = dict()
 def open(fle) :
-    if fle in FUCKINGFILE:
+    if fle in MAP_CACHED_FILE:
         if False : print(f"[INF] reuse fd {fle}")
-        zio = FUCKINGFILE[fle]
+        zio = MAP_CACHED_FILE[fle]
     else:
-        # zio = _io.open_code(fle)
         zio = io.open(fle, 'rb', buffering = 16384) # io.DEFAULT_BUFFER_SIZE : 8192
-        FUCKINGFILE[fle] = zio
+        MAP_CACHED_FILE[fle] = zio
     return zio
 
-def zipentries(fle) :
-    val = zipentriesbycase(fle, True, False, False, False)
-    return val
-
-def zipstaties(fle) :
-    val = zipentriesbycase(fle, False, False, True, False)
-    return val
-
-def zipentriesbycase(fle : str, gen_entries_by_partname : bool, gen_entries_by_fullname : bool, gen_st_data_by_partname : bool, gen_st_data_by_fullname : bool) :
+def zipinfo(fle : str) -> tuple:
     try :
         stf = _bootstrap_external._path_stat(fle) # get file stat struct
         std = _bootstrap_external._path_stat(os.path.dirname(fle)) # get directory stat struct
     except :
         raise ZipException(f"can't open Zip file: {fle!r}")
 
-    entries_by_partname = {} # by partname as d/e.txt
-    entries_by_fullname = {} # by fullname as a/b/c.z/d/e.txt
-    st_data_by_partname = {} # by partname as d/e.txt
-    st_data_by_fullname = {} # by fullname as a/b/c.z/d/e.txt
+    enty = {} # by partname as d/e.txt
+    stat = {} # by partname as d/e.txt
+    tree = Tree()
 
     try:
         fle = fle.replace('\\', '/') # all path must use separator '/'
-        zio = open(fle) if USEFUCKFILE else _io.open_code(fle)
+        zio = open(fle) if USE_CACHED_FILE else _io.open_code(fle)
 
         try:
             zio.seek(-CENTRAL_DIR_SZE, 2)
@@ -195,54 +187,50 @@ def zipentriesbycase(fle : str, gen_entries_by_partname : bool, gen_entries_by_f
             path = '/'.join([fle, name]) # dir is always endswith '/'
             _nme = [p for p in name.split('/') if 0 < len(p)][-1] # file/dir name only ::: low performance
             if False : print(name + " ::: " + _nme)
+            '''
+            - name : by partname as d/e.txt
+            - path : by fullname as drv:/a/b/c.z/d/e.txt
+            '''
+            nt = \
+            { # entry data
+                "isd" : is_d       , # is dir
+                "pth" : path       , # simple file/dir name only
+                "nme" : _nme       , # simple file/dir name only
+                "met" : compress   , # compression method refer to https://en.wikipedia.org/wiki/ZIP_(file_format)
+                "esz" : data_size  , # encrypt data size
+                "dsz" : file_size  , # decrypt data size
+                "pos" : file_offset, # data position
+                "tme" : timestamp  , # datetime
+                "crc" : crc        , # crc-code
+            }
 
-            if gen_entries_by_partname or gen_entries_by_fullname :
-                nt = \
-                { # entry data
-                    "isd" : is_d       , # is dir
-                    "pth" : path       , # simple file/dir name only
-                    "nme" : _nme       , # simple file/dir name only
-                    "met" : compress   , # compression method refer to https://en.wikipedia.org/wiki/ZIP_(file_format)
-                    "esz" : data_size  , # encrypt data size
-                    "dsz" : file_size  , # decrypt data size
-                    "pos" : file_offset, # data position
-                    "tme" : timestamp  , # datetime
-                    "crc" : crc        , # crc-code
-                }
-                if gen_entries_by_partname : entries_by_partname[name] = nt # by partname as d/e.txt
-                if gen_entries_by_fullname : entries_by_fullname[path] = nt # by fullname as a/b/c.z/d/e.txt
+            s_ = std if is_d else stf
+            st = os.stat_result((s_.st_mode,
+                                 s_.st_ino,
+                                 s_.st_dev,
+                                 s_.st_nlink,
+                                 s_.st_uid,
+                                 s_.st_gid,
+                                 file_size,
+                                 timestamp,
+                                 timestamp,
+                                 timestamp,
+                                 0,  # ? s_.st_blocks,
+                                 0,  # ? s_.st_blksize,
+                                 0,  # ? s_.st_rdev,
+                                 0, 0, 0, 0, 0))
 
-            if gen_st_data_by_partname or gen_st_data_by_fullname :
-                #st = copy.deepcopy(std) if is_d else copy.deepcopy(stf)
-                s_ = std if is_d else stf
-                st = os.stat_result((s_.st_mode,
-                                     s_.st_ino,
-                                     s_.st_dev,
-                                     s_.st_nlink,
-                                     s_.st_uid,
-                                     s_.st_gid,
-                                     file_size,
-                                     timestamp,
-                                     timestamp,
-                                     timestamp,
-                                     0, # ? s_.st_blocks,
-                                     0, # ? s_.st_blksize,
-                                     0, # ? s_.st_rdev,
-                                     0, 0, 0, 0, 0))
-                if gen_st_data_by_partname : st_data_by_partname[name] = st # by partname as d/e.txt
-                if gen_st_data_by_fullname : st_data_by_fullname[path] = st # by fullname as a/b/c.z/d/e.txt
+            enty[name] = nt  # by partname as d/e.txt
+            stat[name] = st  # by partname as d/e.txt
+            tree.addpath(name, (nt, st))
     except OSError:
         raise ZipException(f"can't open Zip file: {fle!r}")
     finally:
-        if USEFUCKFILE == False : zio.close()
+        if USE_CACHED_FILE == False : zio.close()
 
-    ret = []
-    cnt = 0
-    if gen_entries_by_partname: ret.append(entries_by_partname); cnt+=1
-    if gen_entries_by_fullname: ret.append(entries_by_fullname); cnt+=1
-    if gen_st_data_by_partname: ret.append(st_data_by_partname); cnt+=1
-    if gen_st_data_by_fullname: ret.append(st_data_by_fullname); cnt+=1
-    return None if cnt == 0 else ret[0] if cnt == 1 else tuple(ret)
+    if False : tree.debug()
+
+    return (enty, stat, tree)
 
 ########################################
 
@@ -262,7 +250,7 @@ def getbytes(fle : str, ent : dict):
 
     try:
         fle = fle.replace('\\', '/') # all path must use separator '/'
-        zio = open(fle) if USEFUCKFILE else _io.open_code(fle)
+        zio = open(fle) if USE_CACHED_FILE else _io.open_code(fle)
 
         try:
             zio.seek(pos)
@@ -291,7 +279,7 @@ def getbytes(fle : str, ent : dict):
     except OSError:
         raise ZipException(f"can't open Zip file: {fle!r}")
     finally:
-        if USEFUCKFILE == False : zio.close()
+        if USE_CACHED_FILE == False : zio.close()
 
     if esz < 0 :
         raise ZipException(f"invalid data size: {esz!r}", path=fle)
@@ -323,83 +311,17 @@ def datetime(d, t):
         -1, -1, -1))
 
 ########################################
+import times
+def _test01(file : str) :
+    ntry, stat, tree = zipinfo(file)
+    if False : tree.debug()
 
-def testcase1() :
-    SETUP_CODE = '''
-import os, sys    
-from zimport.util.zip import zipentries
-'''
-    TEST_CODE = '''
-list = []
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.additional.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.g2p-en.v2.1.0.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.g2p-ko.v0.9.4.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.mecab.ko.v1.3.7.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.librosa.v0.10.2.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.scipy.v1.14.1.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.numba.v0.60.0.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.tensorboard.v2.17.1.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.torch.v2.0.1+cu118.z")
-for p in list :
-    zipentries(p)
-print('.', end='')
-'''
-    # timeit.repeat statement
-    val = timeit.repeat(setup=SETUP_CODE, stmt=TEST_CODE, repeat=10, number=1)
-    print()
-    print(f"[INF] min({min(val)}) ~ max({max(val)})")
-    # [INF] min(0.13779499999873224) ~ max(0.140073399998073)
-
-def testcase2() :
-    path = os.path.dirname(sys.executable) + "/lib/site-packages.additional.z"
-    dict = zipentriesbycase(path, True, False, False, False)
-    ntry = dict['pydub/audio_segment.py']
-    byte = getbytes(path, ntry)
-    name = ntry["nme"]
-    with open(f"w:/{name}", "wb") as b:
-        # Write bytes to file
-        b.write(byte)
-    print("end of job")
-
-def testcase3() :
-    SETUP_CODE = '''
-import os, sys
-import marshal
-from zimport.util.zip import zipentries, zipentriesbycase, getbytes
-'''
-    TEST_CODE = '''
-list = []
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.additional.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.g2p-en.v2.1.0.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.g2p-ko.v0.9.4.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.mecab.ko.v1.3.7.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.librosa.v0.10.2.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.scipy.v1.14.1.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.numba.v0.60.0.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.tensorboard.v2.17.1.z")
-list.append(os.path.dirname(sys.executable) + "/lib/site-packages.torch.v2.0.1+cu118.z")
-for p in list:
-    e1, e2, e3, e4 = zipentriesbycase(p, True, True, True, True)
-    for n in e1:
-        if not (n.endswith(".py") or n.endswith(".pyc")) : continue
-        b = getbytes(p, e1[n])
-        # if n.endswith(".py")  : c = compile(b, n, 'exec', dont_inherit=True)
-        if n.endswith(".pyc") : m = marshal.loads(b[16:])
-    if False : print(f"[INF] completed {p} test ...") 
-print('.', end='')
-'''
-    # timeit.repeat statement
-    val = timeit.repeat(setup=SETUP_CODE, stmt=TEST_CODE, repeat=10, number=1)
-    print()
-    print(f"[INF] min({min(val)}) ~ max({max(val)})")
-    # no reuse fd               : [INF] min(1.575370700000348) ~ max(1.646620899999106)
-    # ok reuse fd               : [INF] min(0.980815700000675) ~ max(1.028009200002998)
-    # ok reuse fd and unmarshal : [INF] min(1.310854899998958) ~ max(1.372702799999388)
-    # ok reuse fd and compile   : [INF] min(12.60920729999998) ~ max(13.583235800000693)
 if __name__ == "__main__":
-    # testcase1()
-    # testcase2()
-    # testcase3()
+    stt = times.current_milli()
+    _test01(os.path.join(os.environ["PROJECT_HOME"].replace('\"', ''), "lib.p12/site-packages.transformers-4.52.3.z"))
+    _test01(os.path.join(os.environ["PROJECT_HOME"].replace('\"', ''), "lib.p12/site-packages.torch-2.6.0+cu126.z"))
+    end = times.current_milli()
+    print(f"[INF] elapsed time {(end - stt)} ms ...")
     pass
 
 

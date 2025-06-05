@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport vv0.1.6 20250603
+# zimport v0.1.7 20250606
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -7,7 +7,7 @@
 
 import os, sys
 
-__version__ = '0.1.6'
+__version__ = '0.1.7'
 __all__ = ["main"]
 
 if sys.version_info < (3,9):

@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport vv0.1.6 20250603
+# zimport v0.1.7 20250606
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -16,7 +16,6 @@ import builtins, tokenize
 from .main_impl import hook_fileio
 from .main_impl import detour
 from .util.path import path_exists_native, find, exists
-from .util.zip import zipstaties
 import zimport.util.zip as ZIP
 
 DBG = False
@@ -98,31 +97,28 @@ class zimport(object):
         self.ZIP_REG_NAMES = set()
         self.ZIP_NTRY_INFO = {}
         self.ZIP_STAT_INFO = {}
+        self.ZIP_NTRY_TREE = {}
         self.install_hook()
         self.install_thirdparty_support_pip()
         self.install_importer()
 
 
     def install_hook(self):
-        builtins.open = hook_fileio(self, "open", True, False, builtins.open)
-        os.stat = hook_fileio(self, "stat", True, False, os.stat)
-        if os.name == "nt" : os.add_dll_directory = hook_fileio(self, "adll", True, True, os.add_dll_directory)  # for torch, numpy
-        if os.name == "nt" : ctypes.WinDLL = hook_fileio(self, "wdll", True, True, ctypes.WinDLL)  # for scipy
-        ctypes.CDLL = hook_fileio(self, "cdll", True, True, ctypes.CDLL)
-        pathlib.Path.read_text = hook_fileio(self, "read (path)", False, True, pathlib.Path.read_text)  # for sklearn
-        pathlib.Path.read_bytes = hook_fileio(self, "bytes(path)", False, True, pathlib.Path.read_bytes)
-        tokenize._builtin_open = builtins.open # 20250520 torch/_dynamo/config.py patch
-        importlib.machinery.FileFinder.find_spec = detour(self, "FileFinder.find_spec", importlib.machinery.FileFinder.find_spec) # 20250531 torchvision patch
-        os.path.exists = detour(self, "os.path.exists", os.path.exists) # 20250531 cv2 patch
+        builtins.open = hook_fileio(self, "builtins.open", True, False, builtins.open)
+        os.stat = hook_fileio(self, "os.stat", True, False, os.stat)
+        if os.name == "nt" : os.add_dll_directory = hook_fileio(self, "os.add_dll_directory", True, True, os.add_dll_directory)  # for torch, numpy
+        if os.name == "nt" : ctypes.WinDLL = hook_fileio(self, "ctypes.WinDLL", True, True, ctypes.WinDLL)  # for scipy
+        ctypes.CDLL = hook_fileio(self, "ctypes.CDLL", True, True, ctypes.CDLL)
+        pathlib.Path.read_text = hook_fileio(self, "pathlib.Path.read_text", False, True, pathlib.Path.read_text)  # for sklearn
+        pathlib.Path.read_bytes = hook_fileio(self, "pathlib.Path.read_bytes", False, True, pathlib.Path.read_bytes)
 
-        os.listdir = detour(self, "os.listdir", os.listdir) # 202506xx transformers patch
-        os.path.isdir = detour(self, "os.path.isdir", os.path.isdir) # 202506xx transformers patch
-        os.path.isfile = detour(self, "os.path.isfile", os.path.isfile) # 202506xx transformers patch
-        os.path.join = detour(self, "os.path.join", os.path.join) # 202506xx transformers patch
-
-        #os.path.dirname = detour(self, "os.path.dirname", os.path.dirname)  # ...
-        #os.path.realpath  = detour(self, "os.path.realpath", os.path.realpath) # ...
-
+        detour(self, "tokenize._builtin_open") # 20250520 torch/_dynamo/config.py patch
+        detour(self, "importlib.machinery.FileFinder.find_spec") # 20250531 torchvision patch
+        detour(self, "os.path.exists") # 20250531 cv2 patch
+        detour(self, "os.listdir") # 20250602 transformers patch
+        detour(self, "os.path.isdir") # 20250602 transformers patch
+        detour(self, "os.path.isfile") # 20250602 transformers patch
+        detour(self, "os.path.join") # 20250602 transformers patch
         pass
 
     def install_importer(self):
@@ -164,22 +160,25 @@ class zimport(object):
                 print(f"[ERR] already has ntry {zip}", file=sys.stderr)
             if zip in self.ZIP_STAT_INFO :
                 print(f"[ERR] already has stat {zip}", file=sys.stderr)
-            ntry, stat = ZIP.zipentriesbycase(zip, True, False, True, False)
+            ntry, stat, tree = ZIP.zipinfo(zip)
             self.ZIP_REG_NAMES.add(zip)
             self.ZIP_NTRY_INFO[zip] = ntry
             self.ZIP_STAT_INFO[zip] = stat
+            self.ZIP_NTRY_TREE[zip] = tree
             self.addsystempath(zip, ntry.keys())
         except Exception as e :
             print(f"[ERR] addarchive {zip} ::: {e}", file = sys.stderr)
 
     def fixarchive(self, zip) :
         try:
-            ntry, stat = ZIP.zipentriesbycase(zip, True, False, True, False)
+            ntry, stat, tree = ZIP.zipinfo(zip)
             self.ZIP_NTRY_INFO[zip] = ntry
             self.ZIP_STAT_INFO[zip] = stat
+            self.ZIP_NTRY_TREE[zip] = tree
         except :
             self.ZIP_NTRY_INFO.pop(zip, None)
             self.ZIP_STAT_INFO.pop(zip, None)
+            self.ZIP_NTRY_TREE.pop(zip, None)
 
     def addsystempath(self, zip, ent) :
         def path(p): f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
@@ -278,40 +277,13 @@ def register_hook(hookname, org_func, hookfunc) :
     hookforfunc[hookname] = org_func, hookfunc
     pass
 
+import zimport.util.module as module
 def restore_hook() :
     for k, v in hookforfunc.items() :
-        if False : pass
-        elif k == "open" :
-            builtins.open = v[0]
-            tokenize._builtin_open = v[0]
-        elif k == "stat" :
-            os.stat = v[0]
-        elif k == "adll" :
-            os.add_dll_directory = v[0]
-        elif k == "wdll" :
-            ctypes.WinDLL = v[0]
-        elif k == "cdll" :
-            ctypes.CDLL = v[0]
-        elif k == "read (path)" :
-            pathlib.Path.read_text = v[0]
-        elif k == "bytes(path)" :
-            pathlib.Path.read_bytes = v[0]
-        elif k == "FileFinder.find_spec" :
-            importlib.machinery.FileFinder.find_spec = v[0]
-        elif k == "os.path.exists" :
-            os.path.exists = v[0]
-        elif k == "os.listdir" :
-            os.listdir = v[0]
-        elif k == "os.path.join" :
-            os.path.join = v[0]
-        elif k == "os.path.isdir" :
-            os.path.isdir = v[0]
-        elif k == "os.path.isfile" :
-            os.path.isfile = v[0]
-
+        mod, clz, fun = module.decompose(k)
+        module.set(mod, clz, fun, v[0]) # restore v[0] (original func)
     hookforfunc.clear()
     pass
-
 
 ######################################## cache directory
 

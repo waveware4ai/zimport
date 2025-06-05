@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport vv0.1.6 20250603
+# zimport v0.1.7 20250606
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain

@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport vv0.1.6 20250603
+# zimport v0.1.7 20250606
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -7,7 +7,6 @@
 import io, os, sys, time, shutil, builtins
 import zipfile
 import pathlib
-from .util.zip import zipstaties
 from .util.path import path_exists_native, find
 
 DBG = False
@@ -119,14 +118,23 @@ def hook_fileio(zimport, name, is_string_path, is_stderr_print, orgfunc) :
     return hook_func
 
 ########################################
-def detour(zimport, hookname : str, orgfunc) :
+
+import zimport.util.module as module
+def detour(zimport, hookname : str) :
     ZIP_NTRY_INFO = zimport.ZIP_NTRY_INFO
     ZIP_STAT_INFO = zimport.ZIP_STAT_INFO
+    ZIP_NTRY_TREE = zimport.ZIP_NTRY_TREE
     ZIPCACHED_DIR = zimport.cached_dir
+
+    #m, f = getmodulefunction(hookname) # name : a.b.c -> a.b and c
+    mod, clz, fun = module.decompose(hookname)
+    orgfunc = module.get(mod, clz, fun) #getattr(m, f)
+
     def hook(*args, **kwargs) :
         def path(p): f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
-        if (hookname == "FileFinder.find_spec") : # 20250531 torchvision patch
-            org_path = org_path = os.path.abspath(args[0].path).replace('\\', '/')
+        if (hookname == "importlib.machinery.FileFinder.find_spec") : # 20250531 torchvision patch
+            org_path = os.path.abspath(args[0].path).replace('\\', '/')
+            if not is_zip_path(org_path): return orgfunc(*args, **kwargs)
             if is_zip_path(org_path):
                 zip_path, ent_path, new_path = zimport.path_maker(org_path)
                 if DBG : print(f"[INF:::detour] {hookname}.path [{org_path}] to [{new_path}]", file=sys.stdout)
@@ -136,6 +144,7 @@ def detour(zimport, hookname : str, orgfunc) :
 
         if (hookname == "os.path.exists") : # 20250531 cv2 patch
             org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
+            if not is_zip_path(org_path): return orgfunc(*args, **kwargs)
             if not 'cv2/' in org_path : return orgfunc(*args, **kwargs)
             zip_path, ent_path, new_path = zimport.path_maker(org_path)
             if ent_path.startswith('cv2/') and zip_path in ZIP_NTRY_INFO :
@@ -145,11 +154,21 @@ def detour(zimport, hookname : str, orgfunc) :
                     args = (new_path, )
                     if DBG : print(f"[INF:::detour] {hookname} [{org_path}] to [{new_path}]", file=sys.stdout)
 
-        if (hookname == "os.listdir") : # 202506xx transformers patch, not yet ...
+        if (hookname == "os.listdir") : # 20250602 transformers patch
             org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
+            if not is_zip_path(org_path): return orgfunc(*args, **kwargs)
             if not 'transformers/' in org_path : return orgfunc(*args, **kwargs)
             if DBG : print(f"[INF:::detour] {hookname} {org_path}")
             zip_path, ent_path, new_path = zimport.path_maker(org_path)
+            if ent_path.startswith('transformers/') and zip_path in ZIP_NTRY_TREE :
+                zip_tree = ZIP_NTRY_TREE[zip_path]
+                t = zip_tree.find(ent_path)
+                if t is not None :
+                    ret = list(t.dict().keys())
+                    ret.sort()
+                    if DBG : print(f"[INF:::detour] {hookname} [{ent_path}] {ret}", file=sys.stderr)
+                    return ret
+            '''
             if ent_path.startswith('transformers/') and zip_path in ZIP_NTRY_INFO :
                 zip_list = ZIP_NTRY_INFO[zip_path]
                 skip_pos = len(ent_path) + 1
@@ -166,8 +185,11 @@ def detour(zimport, hookname : str, orgfunc) :
                     ret.sort()
                     if DBG : print(f"[INF:::detour] {hookname} [{ent_path}] {ret}", file=sys.stderr)
                     return ret
-        if (hookname == "os.path.isdir") :
+            '''
+
+        if (hookname == "os.path.isdir") : # 20250602 transformers patch
             org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
+            if not is_zip_path(org_path) : return orgfunc(*args, **kwargs)
             if not 'transformers/' in org_path : return orgfunc(*args, **kwargs)
             zip_path, ent_path, new_path = zimport.path_maker(org_path)
             if ent_path.startswith('transformers/') and zip_path in ZIP_NTRY_INFO :
@@ -177,8 +199,10 @@ def detour(zimport, hookname : str, orgfunc) :
                 if DBG : print(f"[INF:::detour] {hookname} {org_path} {ret}", file=sys.stderr)
                 return ret
             pass
-        if (hookname == "os.path.isfile") :
+
+        if (hookname == "os.path.isfile") : # 20250602 transformers patch
             org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
+            if not is_zip_path(org_path): return orgfunc(*args, **kwargs)
             if not 'transformers/' in org_path : return orgfunc(*args, **kwargs)
             zip_path, ent_path, new_path = zimport.path_maker(org_path)
             if ent_path.startswith('transformers/') and zip_path in ZIP_NTRY_INFO :
@@ -188,13 +212,17 @@ def detour(zimport, hookname : str, orgfunc) :
                 if DBG : print(f"[INF:::detour] {hookname} {org_path} {ret}", file=sys.stderr)
                 return ret
             pass
+
         if (hookname == "os.path.join") :
             org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
-            if DBG: print(f"[INF:::detour] {hookname} {org_path} ::: {args[1]}", file=sys.stderr)
+            if not is_zip_path(org_path): return orgfunc(*args, **kwargs)
+            if False: print(f"[INF:::detour] {hookname} {org_path} ::: {args[1]}", file=sys.stderr)
             pass
 
         ret = orgfunc(*args, **kwargs)
         return ret
 
+    module.set(mod, clz, fun, hook)
     zimport.register_hook(hookname, orgfunc, hook)
     return hook
+
