@@ -168,12 +168,6 @@ class zimport(object):
             self.ZIP_NTRY_TREE[zip] = tree
             self.addsystempath(zip, ntry.keys())
         except Exception as e :
-            # ntry, stat, tree = ZIP.zipinfo(zip)
-            # self.ZIP_REG_NAMES.add(zip)
-            # self.ZIP_NTRY_INFO[zip] = ntry
-            # self.ZIP_STAT_INFO[zip] = stat
-            # self.ZIP_NTRY_TREE[zip] = tree
-            # self.addsystempath(zip, ntry.keys())
             print(f"[ERR] addarchive {zip} ::: {e}", file = sys.stderr)
 
     def fixarchive(self, zip) :

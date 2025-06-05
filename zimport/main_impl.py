@@ -197,6 +197,7 @@ def detour(zimport, hookname : str) :
             org_path = os.path.abspath(args[0]).replace('\\', '/') # it also convert WindowsPath to string
             if not is_zip_path(org_path) : return orgfunc(*args, **kwargs)
             if 'transformers/' in org_path : return orgfunc(*args, **kwargs) # 20250606 transformers patch
+            if 'diffusers/' in org_path : return orgfunc(*args, **kwargs) # 20250606 diffusers patch
             zip_path, ent_path, new_path = zimport.path_maker(org_path)
             if zip_path in ZIP_NTRY_INFO:
                 zip_list = ZIP_NTRY_INFO[zip_path]

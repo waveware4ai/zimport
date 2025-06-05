@@ -28,11 +28,13 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
         path = os.path.abspath(path) # a/b/./c to a/b/c, a/../a/./b/c to a/b/c #20250529
         path = path.replace('\\', '/') if path is not None else None
         real, virt = PATH.virtual_path_split(path)
-        if not isinstance(path, str):
+        if not isinstance(path, str) :
             raise ZIP.ZipException(f"zip loader exception", path=path)
-        if not path:
+        if not path :
             raise ZIP.ZipException(f"zip loader exception", path=path)
         if not ZIP.is_ziparchive(real) :
+            raise ZIP.ZipException(f"zip loader exception", path=path)
+        if '.cache' in path :
             raise ZIP.ZipException(f"zip loader exception", path=path)
 
         zimport = main.getInstance()
