@@ -35,7 +35,7 @@ The following major packages have been tested:
 |librosa|p3.11, p3.12 (win)|v0.1.8|Ｏ|
 |matplotlib|p3.11, p3.12 (win)|v0.1.8|Ｏ|
 |numpy|p3.11, p3.12 (win, linux)|v0.1.1|Ｏ|
-|onnx|p3.11, p3.12 (win)|v0.1.2|Ｏ|
+|onnx|p3.11, p3.12 (win)|v0.1.6|Ｏ|
 |pandas|p3.11, p3.12 (win)|v0.1.0|Ｏ|
 |psutil|p3.11, p3.12 (win, linux)|v0.1.2|Ｏ|
 |pyworld|p3.11, p3.12 (win)|v0.1.1|Ｏ|
