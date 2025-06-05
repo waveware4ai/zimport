@@ -31,18 +31,18 @@ Support & Tested Package
 The following major packages have been tested:  
 |Package name|Test environment|zimport version|Support Status (Ｏ, △, Ⅹ)|
 |:---:|:---:|:---:|:---:|
-|cv2|windows, p3.11, p3.12|v0.1.5|Ｏ|
-|librosa|windows, p3.11, p3.12|v0.1.8|Ｏ|
-|matplotlib|windows, p3.11, p3.12|v0.1.8|Ｏ|
-|numpy|windows, p3.11, p3.12|v0.1.1|Ｏ|
-|onnx|windows, p3.11, p3.12|v0.1.2|Ｏ|
-|pandas|windows, p3.11, p3.12|v0.1.0|Ｏ|
-|psutil|windows, p3.11, p3.12|v0.1.2|Ｏ|
-|pyworld|windows, p3.11, p3.12|v0.1.1|Ｏ|
-|scikitrun|windows, p3.11, p3.12|v0.1.0|Ｏ|
-|scipy|windows, p3.11, p3.12|v0.1.0|Ｏ|
-|torch|windows, p3.11, p3.12|v0.1.1|Ｏ|
-|transformers|windows, p3.11, p3.12|v0.1.6|Ｏ|
+|cv2|p3.11, p3.12 (win)|v0.1.5|Ｏ|
+|librosa|p3.11, p3.12 (win)|v0.1.8|Ｏ|
+|matplotlib|p3.11, p3.12 (win)|v0.1.8|Ｏ|
+|numpy|p3.11, p3.12 (win, linux)|v0.1.1|Ｏ|
+|onnx|p3.11, p3.12 (win)|v0.1.2|Ｏ|
+|pandas|p3.11, p3.12 (win)|v0.1.0|Ｏ|
+|psutil|p3.11, p3.12 (win, linux)|v0.1.2|Ｏ|
+|pyworld|p3.11, p3.12 (win)|v0.1.1|Ｏ|
+|scikitrun|p3.11, p3.12 (win)|v0.1.0|Ｏ|
+|scipy|p3.11, p3.12 (win)|v0.1.0|Ｏ|
+|torch|p3.11, p3.12 (win, linux)|v0.1.1|Ｏ|
+|transformers|p3.11, p3.12 (win)|v0.1.6|Ｏ|
 
 If you encounter any errors while using it, please be sure to provide feedback.  
 
