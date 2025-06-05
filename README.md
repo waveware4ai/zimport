@@ -39,6 +39,7 @@ The following major packages have been tested:
 |pandas|p3.11, p3.12 (win)|v0.1.0|Ｏ|
 |psutil|p3.11, p3.12 (win, linux)|v0.1.2|Ｏ|
 |pyworld|p3.11, p3.12 (win)|v0.1.1|Ｏ|
+|PyQt5|p3.11, p3.12 (win)|v0.1.8|△ (warning about PyQt5.pk)|
 |scikitrun|p3.11, p3.12 (win)|v0.1.0|Ｏ|
 |scipy|p3.11, p3.12 (win)|v0.1.0|Ｏ|
 |torch, torchvision|p3.11, p3.12 (win, linux)|v0.1.1|Ｏ|
