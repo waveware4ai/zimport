@@ -23,7 +23,7 @@ History
 2025/05/31 v0.1.4 : support (torch, torchvision package; https://pytorch.org/)  
 2025/06/02 v0.1.5 : add builtin functions (uninstall(), zimport_set_cache_dir(PATH), zimport_clear_cache() ...)  
 2025/06/03 v0.1.6 : support (transformers package; https://github.com/huggingface/transformers)  
-2025/06/05 v0.1.7 : some minor bug fix, performance improvement
+2025/06/06 v0.1.7 : some minor bug fix, performance improvement
 
 Installation (pip install)
 ------------
