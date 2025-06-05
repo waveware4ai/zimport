@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='zimport',
-    version='0.1.8',
+    version='0.1.9',
     author='14mhz',
     author_email='14mhz@hanmail.net',    
     description='zimport is used to load and manage python packages from zip-archives.',
