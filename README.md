@@ -24,9 +24,8 @@ History
 2025/06/02 v0.1.5 : add builtin functions (uninstall(), zimport_set_cache_dir(PATH), zimport_clear_cache() ...)  
 2025/06/03 v0.1.6 : support (transformers package; https://github.com/huggingface/transformers)  
 2025/06/06 v0.1.7 : some minor bug fix, performance improvement  
-2025/06/08 v0.1.8 : support (librosa package; https://github.com/librosa/librosa,  
-                             matplotlib package; https://github.com/matplotlib/matplotlib,  
-                             diffusers package; https://github.com/huggingface/diffusers)
+2025/06/08 v0.1.8 : support (librosa package; https://github.com/librosa/librosa, matplotlib package; https://github.com/matplotlib/matplotlib)
+2025/06/xx v0.1.9 : support (diffusers package; https://github.com/huggingface/diffusers)
 
 Support & Tested Package
 ------------
@@ -34,7 +33,7 @@ The following major packages have been tested:
 |package name|test environment|zimport version|support status (Ｏ, △, Ⅹ)|
 |:---:|:---:|:---:|:---:|
 |cv2|p3.10,11,12 (win)|v0.1.5|Ｏ|
-|diffusers|p3.10,11,12 (win)|v0.1.8|Ｏ|
+|diffusers|p3.10,11,12 (win)|v0.1.9|Ⅹ|
 |librosa|p3.10,11,12 (win)|v0.1.8|Ｏ|
 |matplotlib|p3.10,11,12 (win)|v0.1.8|Ｏ|
 |numpy|p3.10,11,12 (win, linux)|v0.1.1|Ｏ|
