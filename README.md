@@ -36,7 +36,7 @@ The following major packages have been tested:
 |diffusers|p3.10,11,12 (win)|v0.1.?|Ⅹ|
 |librosa|p3.10,11,12 (win)|v0.1.8|Ｏ|
 |matplotlib|p3.10,11,12 (win)|v0.1.8|Ｏ|
-|numpy|p3.10,11,12 (win, linux)|v0.1.1|Ｏ|
+|numpy|p3.10,11,12 (win, lnx)|v0.1.1|Ｏ|
 |onnx|p3.10,11,12 (win)|v0.1.6|△ (not tested enough)|
 |pandas|p3.10,11,12 (win)|v0.1.0|Ｏ|
 |psutil|p3.10,11,12 (win, linux)|v0.1.2|Ｏ|
