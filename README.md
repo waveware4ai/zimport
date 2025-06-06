@@ -25,7 +25,7 @@ History
 2025/06/03 v0.1.6 : support (transformers package; https://github.com/huggingface/transformers)  
 2025/06/06 v0.1.7 : some minor bug fix, performance improvement  
 2025/06/07 v0.1.8 : support (librosa package; https://github.com/librosa/librosa, matplotlib package; https://github.com/matplotlib/matplotlib)  
-2025/06/08 v0.1.9 : support (diffusers package; https://github.com/huggingface/diffusers)
+2025/06/08 v0.1.9 : some critical bug fix, support (diffusers package; https://github.com/huggingface/diffusers, grpc; https://github.com/grpc/grpc/tree/master/src/python/grpcio)
 
 Support & Tested Package
 ------------
@@ -34,6 +34,7 @@ The following major packages have been tested:
 |:---:|:---:|:---:|:---:|
 |cv2|p3.10,11,12 (win)|v0.1.5|Ｏ|
 |diffusers|p3.10,11,12 (win)|v0.1.9|Ｏ|
+|grpc|p3.10,11,12 (win)|v0.1.9|Ｏ|
 |librosa|p3.10,11,12 (win)|v0.1.8|Ｏ|
 |matplotlib|p3.10,11,12 (win)|v0.1.8|Ｏ|
 |numpy|p3.10,11,12 (win, linux)|v0.1.1|Ｏ|
@@ -41,7 +42,7 @@ The following major packages have been tested:
 |pandas|p3.10,11,12 (win)|v0.1.0|Ｏ|
 |psutil|p3.10,11,12 (win, linux)|v0.1.2|Ｏ|
 |pyworld|p3.10,11,12 (win)|v0.1.1|Ｏ|
-|PyQt5|p3.10,11,12 (win)|v0.1.8|△ (warning about PyQt5.pk)|
+|PyQt5|p3.10,11,12 (win)|v0.1.8|Ｏ|
 |scikitrun|p3.10,11,12 (win)|v0.1.0|Ｏ|
 |scipy|p3.10,11,12 (win)|v0.1.0|Ｏ|
 |torch, torchvision, torchaudio|p3.10,11,12 (win, linux)|v0.1.1|Ｏ|
