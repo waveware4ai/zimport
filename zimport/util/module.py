@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.9 202506xx
+# zimport v0.1.9 20250608
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -68,7 +68,7 @@ def decompose(funcpath : str) -> tuple[object, object, object] : # dotted path :
             if cur_is_c : cls = getclz(head, tail)
             cur_is_f = isfun(cls if cls is not None else mod, tail)
             if cur_is_f : fun = tail
-            if False :print(f"[{i}] [{head}/{tail}] m[{cur_is_m}] c[{cur_is_c}] f[{cur_is_f}]")
+            if False : print(f"[{i}] [{head}/{tail}] m[{cur_is_m}] c[{cur_is_c}] f[{cur_is_f}]")
         except Exception as e:
             pass
 

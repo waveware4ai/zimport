@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.9 202506xx
+# zimport v0.1.9 20250608
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -10,6 +10,23 @@ import io, _io
 # import _frozen_importlib_external as _bootstrap_external
 from importlib import _bootstrap
 from importlib import _bootstrap_external
+import pathlib
+import _frozen_importlib_external
+
+def slashpath(p : object) -> str:
+    if False : pass
+    elif (type(p) is str) : pass
+    elif (type(p) is pathlib.PosixPath) :
+        p = p.as_posix()
+    elif (type(p) is pathlib.WindowsPath) :
+        p = p.as_posix()
+    elif (type(p) is _frozen_importlib_external.FileFinder) : p = p.path
+    else :
+        print(f"--------------------------------------------------------- must be check", file=sys.stderr)
+
+    a = os.path.abspath(p)
+    u = a.replace('\\', '/') # to unix '/' path
+    return u
 
 def path_exists_native(p) : # exists directory or file
     try : # refer to https://happytest-apidoc.readthedocs.io/en/latest/_modules/_frozen_importlib_external/

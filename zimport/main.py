@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.9 202506xx
+# zimport v0.1.9 20250608
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -16,7 +16,11 @@ import builtins, tokenize
 from .main_impl import hook_fileio
 from .main_impl import detour
 from .main_impl import extract
-from .util.path import path_exists_native, find, exists
+from .util.path import path_exists_native, find, exists, slashpath
+# from .util.cache import init_cached_dir, get_cached_dir, encache_path, decache_path
+from .util import cache
+
+import zimport.util.cache as CACHE
 import zimport.util.zip as ZIP
 
 DBG = False
@@ -41,33 +45,9 @@ def debug(debug=True) :
 
 ########################################
 
-CACHE_DIR_ROOT = None 
 
-def auto_cache_dir() :
-    global CACHE_DIR_ROOT
-    if "PROJECT_HOME" in os.environ :
-        FROM_STRING = "os.environ['PROJECT_HOME']"
-        os.environ["PROJECT_HOME"] = os.environ["PROJECT_HOME"].replace('\"', '') # remove '"'
-        CACHE_DIR_ROOT = exists(os.environ["PROJECT_HOME"], ['.', '..', 'lib', 'lib/site-packages'], '.cache')
-        if CACHE_DIR_ROOT is None : CACHE_DIR_ROOT = os.environ["PROJECT_HOME"] + '/' + ".cache"
-    else :
-        FROM_STRING = "os.path.dirname(sys.executable)"
-        CACHE_DIR_ROOT = exists(os.path.dirname(sys.executable), ['.', '..', 'lib', 'lib/site-packages'], '.cache')
-        if CACHE_DIR_ROOT is None : CACHE_DIR_ROOT = os.path.dirname(sys.executable) + '/' + ".cache"
 
-    CACHE_DIR_ROOT = CACHE_DIR_ROOT.replace('\\', '/')
-    if not path_exists_native(CACHE_DIR_ROOT) : os.makedirs(CACHE_DIR_ROOT, exist_ok=True)
-    print(f"[INF] zimport cache_dir ::: [{CACHE_DIR_ROOT}] from {FROM_STRING}", file=sys.stderr)
 
-def cached_dir(path) : # a/b/c.z/d to library.dir/.cache/a/b/c.z/d
-    # if CACHE_DIR_ROOT is None : auto_cache_dir()
-    z = path[path.rfind('/'):] # path = c:/a/b/c.z, z = /c.z
-    p = None
-    if CACHE_DIR_ROOT :
-        p = ''.join([CACHE_DIR_ROOT, z])
-    else :
-        p = ''.join([path, "/../", ".cache", z])
-    return p
 
 ########################################
 
@@ -94,7 +74,8 @@ class zimport(object):
         zimport.__instance__ = self
 
         print("[INF] zimport installed ...", file=sys.stderr)
-        if CACHE_DIR_ROOT is None : auto_cache_dir()
+
+        if cache.CACHE_DIR_ROOT is None : cache.init_cached_dir()
         self.ZIP_REG_NAMES = set()
         self.ZIP_NTRY_INFO = {}
         self.ZIP_STAT_INFO = {}
@@ -116,11 +97,11 @@ class zimport(object):
         detour(self, "tokenize._builtin_open") # 20250520 torch/_dynamo/config.py patch
         detour(self, "importlib.machinery.FileFinder.find_spec") # 20250531 torchvision patch
         detour(self, "os.path.exists") # 20250531 cv2 patch
-        detour(self, "os.listdir") # 20250602 transformers patch
-        # detour(self, "os.path.isdir") # 20250607 no needs this code ???
+        detour(self, "os.path.isdir") # 20250607 no needs this code ???
         detour(self, "os.path.isfile") # 20250606 transformers requires this patch !!!
-        # detour(self, "os.path.dirname") # 20250607 no needs this code ???
-        detour(self, "os.path.join") # 20250606 librosa patch
+        detour(self, "os.listdir") # 20250602 transformers patch
+        detour(self, "os.path.join") # 20250606 librosa patch # 이거 키면 transformers 죽는다.
+        detour(self, "os.path.dirname") # 20250607 no needs this code ???
         pass
 
     def install_importer(self):
@@ -142,7 +123,7 @@ class zimport(object):
     ####
 
     def cached_dir(self, path) : # a/b/c.z/d to library.dir/.cache/a/b/c.z/d
-        return cached_dir(path)
+        return cache.get_cached_dir(path)
 
     ####
 
@@ -200,11 +181,11 @@ class zimport(object):
             dot = tmp[idx]  # a.b.c
             pth = zip + "/" + dll  # zipped path. ie, library.dir/x.y.z/a/b/c.dll
             pth = path(zip + "/" + dll)  # cached path. ie, library.dir/.cache/x.y.z/a/b/c.dll
-            unq.add(os.path.dirname(pth))
+            # unq.add(os.path.dirname(pth)) # resource problem here ~~~
         if 0 < len(unq):
             for dir in unq:
-                #if os.name == "nt" : os.add_dll_directory(dir) # no needs ??? 20250606
-                addsyspath(os.path.abspath(dir) if os.name == "nt" else dir)
+                if os.name == "nt" : os.add_dll_directory(dir) # no needs ??? 20250606, 이것도 필요함에 유의 ........... 아 이거 진짜 필요해 ???
+                addsyspath(os.path.abspath(dir) if os.name == "nt" else dir) # Is this absolutely necessary?
                 if DBG : print("[INF] add PATH [" + dir + "]")
 
         for dir in [p for p in sys.path if not (p.endswith(".z") or p.endswith(".zip"))]: addsyspath(os.path.abspath(dir) if os.name == "nt" else dir)
@@ -215,8 +196,11 @@ class zimport(object):
             for i in range(len(paths)) :
                 print(f"[PATH][{i}] : {paths[i]}")
 
-    def path_maker(self, org_path) :
-        return path_maker(self.ZIP_REG_NAMES, org_path)
+    def encache_path(self, org_path) :
+        return cache.encache_path(self.ZIP_REG_NAMES, org_path)
+
+    def decache_path(self, cac_path) :
+        return cache.decache_path(self.ZIP_REG_NAMES, cac_path)
 
     def invalidate_caches(self) :
         invalidate_caches()
@@ -224,30 +208,35 @@ class zimport(object):
     def register_hook(self, hookname, org_func, hookfunc) :
         return register_hook(hookname, org_func, hookfunc)
 
-def addsyspath(path) :
-    paths = os.environ["PATH"].split(';' if os.name == "nt" else ':')
-    if not (path in paths) :
-        os.environ["PATH"] += path + (';' if os.name == "nt" else ':')
-        if False : print(f"[INF] add PATH : {path}")
+def addsyspath(path) : # must be check, Is this absolutely necessary?
+    try:
+        paths = os.environ["PATH"].split(';' if os.name == "nt" else ':')
+        if not (path in paths):
+            os.environ["PATH"] += path + (';' if os.name == "nt" else ':')
+            if False: print(f"[INF] add PATH : {path}")
+        pass
+    except Exception as e:
+        if False: traceback.print_exc()
+        if DBG: print(f"[INF:::addsyspath@zimport] failed [{e}] with [{path}] ...", file=sys.stderr)
 
-cacheofpath = dict()
-def path_maker(ziparchive, org_path):
-    if org_path in cacheofpath: return cacheofpath[org_path]  # search cache
-    abs_path = os.path.abspath(org_path)
-    unixpath = abs_path.replace('\\', '/')
-    zip_path = ''
-    ent_path = ''
-    for p in ziparchive:
-        if unixpath.startswith(p):  # a.zip/a/b/c.x startswith a.zip
-            zip_path = p
-            ent_path = unixpath.replace(''.join([p, '/']), '')  # ent_path = unixpath.replace(p + '/', '')
-            break
-    new_path = '/'.join([cached_dir(zip_path), ent_path])  # new_path = cachedir(zip_path) + '/' + ent_path
-    new_path = os.path.abspath(new_path).replace('\\', '/')
-    cacheofpath[org_path] = zip_path, ent_path, new_path  # save cache
-    return zip_path, ent_path, new_path
+# cacheofpath = dict()
+# def encache_path(ziparchive, org_path):
+#     if org_path in cacheofpath: return cacheofpath[org_path]  # search cache
+#     abs_path = os.path.abspath(org_path)
+#     unixpath = abs_path.replace('\\', '/')
+#     zip_path = ''
+#     ent_path = ''
+#     for p in ziparchive:
+#         if unixpath.startswith(p):  # a.zip/a/b/c.x startswith a.zip
+#             zip_path = p
+#             ent_path = unixpath.replace(''.join([p, '/']), '')  # ent_path = unixpath.replace(p + '/', '')
+#             break
+#     new_path = '/'.join([cached_dir(zip_path), ent_path])  # new_path = cachedir(zip_path) + '/' + ent_path
+#     new_path = os.path.abspath(new_path).replace('\\', '/')
+#     cacheofpath[org_path] = zip_path, ent_path, new_path  # save cache
+#     return zip_path, ent_path, new_path
 
-def path_maker_static(zip_file, org_file):
+def encache_path_static(zip_file, org_file):
     abs_path = os.path.abspath(org_file)
     unixpath = abs_path.replace('\\', '/')
     zip_path = ''
@@ -255,7 +244,7 @@ def path_maker_static(zip_file, org_file):
     if unixpath.startswith(zip_file):  # a.zip/a/b/c.x startswith a.zip
         zip_path = zip_file
         ent_path = unixpath.replace(''.join([zip_file, '/']), '')  # ent_path = unixpath.replace(p + '/', '')
-    new_path = '/'.join([cached_dir(zip_path), ent_path])  # new_path = cachedir(zip_path) + '/' + ent_path
+    new_path = '/'.join([cache.get_cached_dir(zip_path), ent_path])  # new_path = cachedir(zip_path) + '/' + ent_path
     new_path = os.path.abspath(new_path).replace('\\', '/')
     return zip_path, ent_path, new_path
 
@@ -263,7 +252,7 @@ def invalidate_caches():
     if False : print(f"[INF] invalidate_caches ...")
     if True : sys.path_importer_cache.clear()
     if False : importlib.invalidate_caches()   # very danger code
-    cacheofpath.clear()
+    # cacheofpath.clear()
 
 ######################################## instance of singleton
 
@@ -330,8 +319,8 @@ def zimport_extract_to_cache(zip, dir, debug=True) : # preload
     lst = [zip + "/" + p for p in lst if p.startswith(dir)]
     for f in lst:
         if f.endswith('/') : continue # is directory
-        zip_path, ent_path, new_path = path_maker_static(zip, f)
-        extract(zip_path, cached_dir(zip_path), ent_path)
+        zip_path, ent_path, new_path = encache_path_static(zip, f)
+        extract(zip_path, cache.get_cached_dir(zip_path), ent_path)
         if pth is None :
             pth = new_path if len(lst) == 1 else os.path.dirname(new_path)
         if debug :print("[INF::extract] {}".format(new_path), file=sys.stderr)

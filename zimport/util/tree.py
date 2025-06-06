@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.9 202506xx
+# zimport v0.1.9 20250608
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -20,6 +20,10 @@ class Tree :
         self._name = name if name is not None else ''
         self._dict = dict()
         self._data = data
+
+    def root(self) -> Self :
+        if self.supr() is None : return self
+        return self.supr().root()
 
     def supr(self) : return self._supr
     def name(self) : return self._name
@@ -122,9 +126,6 @@ def space(dep) :
 
 ########################################
 
-import times
-import zip as ZIP
-
 def _test01() :
     print("------------")
     t = Tree()
@@ -147,9 +148,11 @@ def _test01() :
     pass
 
 def _test02(file : str) :
+    import zip as ZIP
     ntry, stat, tree = ZIP.zipinfo(file)
     if False : tree.debug()
 
+import times
 if __name__ == '__main__':
     stt = times.current_milli()
     _test01()

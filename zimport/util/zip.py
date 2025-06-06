@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.9 202506xx
+# zimport v0.1.9 20250608
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -82,8 +82,7 @@ def zipinfo(fle : str) -> tuple:
 
     enty = {} # by partname as d/e.txt
     stat = {} # by partname as d/e.txt
-    tree = Tree()
-
+    tree = Tree().set(fle)
     try:
         #fle = fle.replace('\\', '/') # all path must use separator '/'
         zio = open(fle) if USE_CACHED_FILE else _io.open_code(fle)
@@ -195,8 +194,9 @@ def zipinfo(fle : str) -> tuple:
             nt = \
             { # entry data
                 "isd" : is_d       , # is dir
-                "pth" : path       , # simple file/dir name only
-                "nme" : _nme       , # simple file/dir name only
+                "pth" : path       , # drv:/a/b/c.z/d/e.txt
+                "ent" : name       , # d/e.txt
+                "nme" : _nme       , # e.txt
                 "met" : compress   , # compression method refer to https://en.wikipedia.org/wiki/ZIP_(file_format)
                 "esz" : data_size  , # encrypt data size
                 "dsz" : file_size  , # decrypt data size
@@ -223,7 +223,10 @@ def zipinfo(fle : str) -> tuple:
 
             enty[name] = nt  # by partname as d/e.txt
             stat[name] = st  # by partname as d/e.txt
-            tree.addpath(name, (nt, st))
+            t = tree.addpath(name, (nt, st))
+            nt["_tr"] = t
+            nt["_st"] = st
+            pass
     except OSError:
         raise ZipException(f"can't open Zip file: {fle!r}")
     finally:
