@@ -37,6 +37,7 @@ The following major packages have been tested:
 |grpc|p3.10,11,12 (win)|v0.1.9|Ｏ|
 |librosa|p3.10,11,12 (win)|v0.1.8|Ｏ|
 |matplotlib|p3.10,11,12 (win)|v0.1.8|Ｏ|
+|numba|p3.10,11,12 (win, linux)|v0.1.9|Ｏ|
 |numpy|p3.10,11,12 (win, linux)|v0.1.1|Ｏ|
 |onnx|p3.10,11,12 (win)|v0.1.6|△ (not tested enough)|
 |pandas|p3.10,11,12 (win)|v0.1.0|Ｏ|
