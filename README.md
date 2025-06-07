@@ -19,13 +19,13 @@ History
 2025/05/21 v0.1.0 : initial released  
 2025/05/26 v0.1.1 : support macosx, some minor bug fix  
 2025/05/28 v0.1.2 : some minor bug fix  
-2025/05/29 v0.1.3 : support (yaml packages; https://github.com/yaml/pyyaml)  
-2025/05/31 v0.1.4 : support (torch, torchvision package; https://pytorch.org/)  
+2025/05/29 v0.1.3 : support packages (yaml; https://github.com/yaml/pyyaml)  
+2025/05/31 v0.1.4 : support packages (torch, torchvision; https://pytorch.org/)  
 2025/06/02 v0.1.5 : add builtin functions (uninstall(), zimport_set_cache_dir(PATH), zimport_clear_cache() ...)  
-2025/06/03 v0.1.6 : support (transformers package; https://github.com/huggingface/transformers)  
+2025/06/03 v0.1.6 : support packages (transformers; https://github.com/huggingface/transformers)  
 2025/06/06 v0.1.7 : some minor bug fix, performance improvement  
-2025/06/07 v0.1.8 : support (librosa package; https://github.com/librosa/librosa, matplotlib package; https://github.com/matplotlib/matplotlib)  
-2025/06/08 v0.1.9 : some critical bug fix, support (diffusers package; https://github.com/huggingface/diffusers, grpc; https://github.com/grpc/grpc/tree/master/src/python/grpcio)
+2025/06/07 v0.1.8 : support packages (librosa; https://github.com/librosa/librosa, matplotlib; https://github.com/matplotlib/matplotlib)  
+2025/06/08 v0.1.9 : some critical bug fix, support packages (diffusers; https://github.com/huggingface/diffusers, grpc; https://github.com/grpc/grpc/tree/master/src/python/grpcio)
 
 Support & Tested Package
 ------------
