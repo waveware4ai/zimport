@@ -25,7 +25,7 @@ History
 2025/06/03 v0.1.6 : support packages (transformers; https://github.com/huggingface/transformers)  
 2025/06/06 v0.1.7 : some minor bug fix, performance improvement  
 2025/06/07 v0.1.8 : support packages (librosa; https://github.com/librosa/librosa, matplotlib; https://github.com/matplotlib/matplotlib)  
-2025/06/08 v0.1.9 : some critical bug fix, support packages (diffusers; https://github.com/huggingface/diffusers, grpc; https://github.com/grpc/grpc/tree/master/src/python/grpcio)
+2025/06/08 v0.1.9 : some critical bug fix, support packages (diffusers; https://github.com/huggingface/diffusers, grpc; https://github.com/grpc/grpc/tree/master/src/python/grpcio, numba; https://github.com/numba/numba)
 
 Support & Tested Package
 ------------
