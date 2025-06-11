@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.9 20250608
+# zimport v0.1.10 20250611
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -62,7 +62,7 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
             else :
                 spec = BOOTSTRAP.spec_from_loader(fullname, self, is_package=has)  # invoke get_filename
 
-        if DBG and spec : print(f"[INF:::pathfinder] find_spec : {self.real.rpartition('/')[2]}:::{self.virt}:::{fullname}:::{spec}")
+        if DBG and spec is not None: print(f"[INF:::pathfinder] find_spec : {self.real.rpartition('/')[2]}:::{self.virt}:::{fullname}:::{spec}")
         return spec
 
     ########################################
@@ -115,6 +115,15 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
 
         if DBG: print(f"[INF:::exec_module@pathfinder] exec_module : {spec.name} ::: {spec.origin}")
 
+        pydpart = spec.name.replace('.', '/').rpartition('/')
+        pydname = '/'.join([pydpart[0], pydpart[2] + pathfinder_impl._PYTHON__PY_DLL_])
+        if pydname in self.zent : # 20250611 cython patch
+            replace_pyd = '/'.join([self.real, pydname])
+            replace_pth = path(replace_pyd)
+            if DBG : print(f"[INF:::exec_module@pathfinder] exec_module : load [{replace_pyd}] to [{replace_pth}]", file=sys.stdout)
+            m = self.custom_load_dynamic(module.__name__, replace_pth)
+            return m  
+
         if spec.origin.endswith("__init__.py") : # 20240930 pyworld patch load 'package/package.cp312-win_amd64.pyd'
             if DBG: print(f"[INF:::exec_module@pathfinder] exec_module : __init__ [{spec.origin}]", file=sys.stdout)
             pydname = '/'.join([spec.name, spec.name.rpartition('.')[2] + pathfinder_impl._PYTHON__PY_DLL_]) # 'name/name.cp312-win_amd64.pyd'
@@ -123,6 +132,7 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
                 replace_pth = path(replace_pyd)
                 if DBG : print(f"[INF:::exec_module@pathfinder] exec_module : load [{replace_pyd}] to [{replace_pth}]", file=sys.stdout)
                 m = self.custom_load_dynamic(module.__name__, replace_pth)
+                return m  # 20250610 kornia-rs patch
 
         if spec.origin.endswith(".pyd") or spec.origin.endswith(".so") or (".so." in spec.origin) or spec.origin.endswith(".dylib") : # 20250514 linux patch
             #def path(p): f = builtins.open(p); n = f.name; f.close(); return n.replace('\\', '/')
@@ -130,7 +140,7 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
             #import imp
             #m = imp.load_dynamic(module.__name__, name) # imp deprecated since version 3.4, removed in version 3.12.
             m = self.custom_load_dynamic(module.__name__, name)
-            if DBG : print(f"[INF:::exec_module@pathfinder] load {[name,]}", file=sys.stderr)
+            if DBG : print(f"[INF:::exec_module@pathfinder] load [{name}]", file=sys.stderr)
             return m
         else :
             code, ispackage, mod_path = self.get_code(module.__name__)
@@ -139,9 +149,25 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
             #exec(code, module.__dict__)  # mainly exec works here ...
             try:
                 exec(code, module.__dict__) # mainly exec works here ...
+            except ModuleNotFoundError as e:
+                if False: traceback.print_exc()
+                if DBG : print(f"[INF:::exec_module@pathfinder] ModuleNotFoundError [{e}] with [{mod_path}] ...", file=sys.stderr)
+                raise ModuleNotFoundError("[ERR] failed exec_module, occur ModuleNotFoundError ...")
+                pass
+            except ImportError as e:
+                if False: traceback.print_exc()
+                if DBG : print(f"[INF:::exec_module@pathfinder] ImportError [{e}] with [{mod_path}] ...", file=sys.stderr)
+                raise ImportError("[ERR] failed exec_module, occur ImportError ...")
+                pass
+            except AttributeError as e:
+                if True: traceback.print_exc()
+                if DBG : print(f"[INF:::exec_module@pathfinder] AttributeError [{e}] with [{mod_path}] ...", file=sys.stderr)
+                raise AttributeError("[ERR] failed exec_module, occur AttributeError ...")
+                pass
             except Exception as e:
-                if DBG : print(f"[INF:::exec_module@pathfinder] failed [{e}] with [{mod_path}] ...", file=sys.stderr)
-                raise ImportError("[ERR] failed import ...")
+                if False: traceback.print_exc()
+                if DBG : print(f"[INF:::exec_module@pathfinder] Exception [{e}] with [{mod_path}] ...", file=sys.stderr)
+                raise Exception("[ERR] failed exec_module ...")
                 pass
 
     def load_module(self, fullname):

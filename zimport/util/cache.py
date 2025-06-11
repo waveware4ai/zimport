@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.9 20250608
+# zimport v0.1.10 20250611
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -73,7 +73,8 @@ def encache_path(ziparchive, path : str) -> tuple: # convert to en-cache path
             entpath = unxpath.replace(''.join([p, '/']), '') if unxpath != p else ''
             break
     newpath = None if zippath is None else ('/' if entpath != '' else '').join([get_cached_dir(zippath), entpath])
-    if newpath is None : print(f"[ERR:::cache] invalid encache path [{path}] ... ", file=sys.stderr); return None, None, path
+    if newpath is None :
+        print(f"[ERR:::cache] invalid encache path [{path}] ... ", file=sys.stderr); return None, None, path
     bankofpath[path] = zippath, entpath, newpath  # save cache
     return zippath, entpath, newpath
 
@@ -90,7 +91,8 @@ def decache_path(ziparchive, path) -> tuple : # convert to de-cache path
             zippath = p
             newpath = ('/' if entpath != '' else '').join([zippath, entpath])
             break
-    if newpath is None : print(f"[ERR:::cache] invalid decache path [{path}] ... ", file=sys.stderr); return None, None, path
+    if newpath is None : 
+        print(f"[ERR:::cache] invalid decache path [{path}] ... ", file=sys.stderr); return None, None, path
     bankofpath[path] = zippath, entpath, newpath  # save cache
     return zippath, entpath, newpath
 
@@ -108,12 +110,14 @@ import times
 if __name__ == '__main__':
     init_cached_dir()
     stt = times.current_milli()
+    print('----------')
     _test('c:\\1\\2\\3\\x.zip\\a\\b\\c')
     _test('c:\\1\\2\\3\\x.zip\\a\\b\\c\\')
     _test('c:/1\\2//3\\x.z\\a\\b\\\\c\\\\')
     _test('c:\\1\\2\\3\\x.zip')
     _test('c:\\1\\2\\3\\x.zip\\')
     _test('c:\\1\\2\\3\\x.z\\\\')
+    print('----------')
     end = times.current_milli()
     print(f"[INF] elapsed time {(end - stt)} ms ...")
     pass

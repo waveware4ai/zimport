@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.9 20250608
+# zimport v0.1.10 20250611
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -17,12 +17,12 @@ def slashpath(p : object) -> str:
     if False : pass
     elif (type(p) is str) : pass
     elif (type(p) is pathlib.PosixPath) :
-        p = p.as_posix()
+        p = p.as_posix() # must be check
     elif (type(p) is pathlib.WindowsPath) :
         p = p.as_posix()
     elif (type(p) is _frozen_importlib_external.FileFinder) : p = p.path
     else :
-        print(f"--------------------------------------------------------- must be check", file=sys.stderr)
+        print(f"[ERR:::slashpath@path] --- !!! @@@ ### must be check path [{p}]", file=sys.stderr)
 
     a = os.path.abspath(p)
     u = a.replace('\\', '/') # to unix '/' path

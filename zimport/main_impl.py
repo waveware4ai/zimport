@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.9 20250608
+# zimport v0.1.10 20250611
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -245,7 +245,7 @@ def detour(zimport, hookname : str) :
                 return orgfunc(*args, **kwargs)
             elif is_z :
                 ret = orgfunc(*args, **kwargs)
-                if (ret.endswith(".dll") or ret.endswith(".so") or (".so." in ret) or ret.endswith(".dylib") or ret.endswith(".exe")) :
+                if (ret.endswith(".dll") or ret.endswith(".so") or (".so." in ret) or ret.endswith(".dylib")) : #  or ret.endswith(".exe")) : # causeof pip/_vendor/distlib/resources.ZipResourceFinder, do not join to .cache with .exe extension
                     zip_path, ent_path, new_path = zimport.encache_path(ret)
                     if DBG : print(f"[INF:::detour] [{hookname}] ::: {ret} -> {new_path}")
                     return new_path

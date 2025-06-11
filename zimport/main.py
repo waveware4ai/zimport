@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# zimport v0.1.9 20250608
+# zimport v0.1.10 20250611
 # by 14mhz@hanmail.net, zookim@waveware.co.kr
 #
 # This code is in the public domain
@@ -7,6 +7,8 @@
 # refer to https://stackoverflow.com/questions/57651488/how-to-understand-pythons-module-lookup
 # refer to https://docs.python.org/3/reference/import.html#the-meta-path
 # refer to https://peps.python.org/pep-0302/
+
+__version__ = '0.1.10'
 
 import io, os, sys, importlib, time, shutil
 import ctypes
@@ -73,7 +75,7 @@ class zimport(object):
         cls._init = True
         zimport.__instance__ = self
 
-        print("[INF] zimport installed ...", file=sys.stderr)
+        print(f"[INF] zimport installed {__version__} ...", file=sys.stderr)
 
         if cache.CACHE_DIR_ROOT is None : cache.init_cached_dir()
         self.ZIP_REG_NAMES = set()
@@ -88,20 +90,20 @@ class zimport(object):
     def install_hook(self):
         builtins.open = hook_fileio(self, "builtins.open", True, False, builtins.open)
         os.stat = hook_fileio(self, "os.stat", True, False, os.stat)
-        if os.name == "nt" : os.add_dll_directory = hook_fileio(self, "os.add_dll_directory", True, True, os.add_dll_directory)  # for torch, numpy
-        if os.name == "nt" : ctypes.WinDLL = hook_fileio(self, "ctypes.WinDLL", True, True, ctypes.WinDLL)  # for scipy
+        if os.name == "nt" : os.add_dll_directory = hook_fileio(self, "os.add_dll_directory", True, True, os.add_dll_directory)
+        if os.name == "nt" : ctypes.WinDLL = hook_fileio(self, "ctypes.WinDLL", True, True, ctypes.WinDLL)
         ctypes.CDLL = hook_fileio(self, "ctypes.CDLL", True, True, ctypes.CDLL)
-        pathlib.Path.read_text = hook_fileio(self, "pathlib.Path.read_text", False, True, pathlib.Path.read_text)  # for sklearn
+        pathlib.Path.read_text = hook_fileio(self, "pathlib.Path.read_text", False, True, pathlib.Path.read_text)
         pathlib.Path.read_bytes = hook_fileio(self, "pathlib.Path.read_bytes", False, True, pathlib.Path.read_bytes)
 
-        detour(self, "tokenize._builtin_open") # 20250520 torch/_dynamo/config.py patch
-        detour(self, "importlib.machinery.FileFinder.find_spec") # 20250531 torchvision patch
-        detour(self, "os.path.exists") # 20250531 cv2 patch
-        detour(self, "os.path.isdir") # 20250607 no needs this code ???
-        detour(self, "os.path.isfile") # 20250606 transformers requires this patch !!!
-        detour(self, "os.listdir") # 20250602 transformers patch
-        detour(self, "os.path.join") # 20250606 librosa patch # 이거 키면 transformers 죽는다.
-        detour(self, "os.path.dirname") # 20250607 no needs this code ???
+        detour(self, "tokenize._builtin_open")
+        detour(self, "importlib.machinery.FileFinder.find_spec")
+        detour(self, "os.path.exists")
+        detour(self, "os.path.isdir")
+        detour(self, "os.path.isfile")
+        detour(self, "os.listdir")
+        detour(self, "os.path.join")
+        detour(self, "os.path.dirname")
         pass
 
     def install_importer(self):
@@ -174,7 +176,7 @@ class zimport(object):
             pth = zip + "/" + pyd  # zipped path. ie, library.dir/x.y.z/a/b/c.cp311-win_amd64.pyd
             pth = path(zip + "/" + pyd)  # cached path. ie, library.dir/.cache/x.y.z/a/b/c.cp311-win_amd64.pyd
             unq.add(os.path.dirname(pth))
-        lst = [p for p in ent if (p.endswith(".dll") or p.endswith(".so") or (".so." in p) or p.endswith(".dylib") or p.endswith(".exe"))]
+        lst = [p for p in ent if (p.endswith(".dll") or p.endswith(".so") or (".so." in p) or p.endswith(".dylib") or p.endswith(".exe"))] # or p.endswith(".pyx") or p.endswith(".pxd")
         tmp = [p.replace('/', '.') for p in lst]
         for idx in range(len(lst)):
             dll = lst[idx]  # a/b/c.dll'
@@ -184,14 +186,14 @@ class zimport(object):
             # unq.add(os.path.dirname(pth)) # resource problem here ~~~
         if 0 < len(unq):
             for dir in unq:
-                if os.name == "nt" : os.add_dll_directory(dir) # no needs ??? 20250606, 이것도 필요함에 유의 ........... 아 이거 진짜 필요해 ???
-                addsyspath(os.path.abspath(dir) if os.name == "nt" else dir) # Is this absolutely necessary?
-                if DBG : print("[INF] add PATH [" + dir + "]")
+                if os.name == "nt" : os.add_dll_directory(dir) # if too many call, will see an err
+                addsyspath(os.path.abspath(dir) if os.name == "nt" else dir) # is this absolutely necessary?
+                if False and DBG : print(f"[INF] add PATH [{dir}]")
 
         for dir in [p for p in sys.path if not (p.endswith(".z") or p.endswith(".zip"))]: addsyspath(os.path.abspath(dir) if os.name == "nt" else dir)
         addsyspath(os.path.abspath(os.path.dirname(sys.executable)))  # python.exe installed dir
         addsyspath(os.path.abspath(os.path.dirname(sys.executable) + "/library/bin"))
-        if DBG : 
+        if False and DBG :
             paths = os.environ["PATH"].split(';' if os.name == "nt" else ':')
             for i in range(len(paths)) :
                 print(f"[PATH][{i}] : {paths[i]}")
@@ -213,7 +215,7 @@ def addsyspath(path) : # must be check, Is this absolutely necessary?
         paths = os.environ["PATH"].split(';' if os.name == "nt" else ':')
         if not (path in paths):
             os.environ["PATH"] += path + (';' if os.name == "nt" else ':')
-            if False: print(f"[INF] add PATH : {path}")
+            if DBG : print(f"[INF] add PATH [{path}]")
         pass
     except Exception as e:
         if False: traceback.print_exc()
