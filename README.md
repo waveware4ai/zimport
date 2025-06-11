@@ -26,13 +26,16 @@ History
 2025/06/06 v0.1.7 : some minor bug fix, performance improvement  
 2025/06/07 v0.1.8 : support packages (librosa; https://github.com/librosa/librosa, matplotlib; https://github.com/matplotlib/matplotlib)  
 2025/06/08 v0.1.9 : some critical bug fix, support packages (diffusers; https://github.com/huggingface/diffusers, grpc; https://github.com/grpc/grpc/tree/master/src/python/grpcio, numba; https://github.com/numba/numba)
+2025/06/11 v0.1.10 : support packages (cython; https://github.com/cython/cython, av; https://github.com/PyAV-Org/PyAV)
 
 Support & Tested Package
 ------------
 The following major packages have been tested:  
 |package name <br> (with dependency)|python & os <br> environment|zimport <br> implemented version|support status <br> (Ｏ, △, Ⅹ)|
 |:---:|:---:|:---:|:---:|
+|av|p3.10,11,12 (win)|v0.1.10|Ｏ|
 |cv2|p3.10,11,12 (win)|v0.1.5|Ｏ|
+|cython|p3.10,11,12 (win)|v0.1.10|Ｏ|
 |diffusers|p3.10,11,12 (win)|v0.1.9|Ｏ|
 |grpc|p3.10,11,12 (win)|v0.1.9|Ｏ|
 |librosa|p3.10,11,12 (win)|v0.1.8|Ｏ|
