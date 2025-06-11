@@ -160,7 +160,7 @@ class PathFinder(): #_bootstrap_external._LoaderBasics/LoaderBasics
                 raise ImportError("[ERR] failed exec_module, occur ImportError ...")
                 pass
             except AttributeError as e:
-                if True: traceback.print_exc()
+                if False: traceback.print_exc()
                 if DBG : print(f"[INF:::exec_module@pathfinder] AttributeError [{e}] with [{mod_path}] ...", file=sys.stderr)
                 raise AttributeError("[ERR] failed exec_module, occur AttributeError ...")
                 pass
