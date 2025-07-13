@@ -150,7 +150,7 @@ def _test01() :
 def _test02(file : str) :
     import zip as ZIP
     ntry, stat, tree = ZIP.zipinfo(file)
-    if False : tree.debug()
+    if True : tree.debug()
 
 import times
 if __name__ == '__main__':
