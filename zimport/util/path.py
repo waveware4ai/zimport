@@ -16,6 +16,11 @@ import _frozen_importlib_external
 def slashpath(p : object) -> str:
     if False : pass
     elif (type(p) is str) : pass
+    elif (type(p) is bytes) :
+        # decode bytes to str so downstream str-only consumers
+        # (is_zip_path / encache_path / decache_path) keep working.
+        # PEP 383 surrogateescape preserves arbitrary filesystem bytes.
+        p = p.decode('utf-8', errors='surrogateescape')
     elif (type(p) is pathlib.PosixPath) :
         p = p.as_posix() # must be check
     elif (type(p) is pathlib.WindowsPath) :
